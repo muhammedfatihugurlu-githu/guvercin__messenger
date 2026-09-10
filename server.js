@@ -39,7 +39,13 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 socketLogin();
 
 function socketLogin() {
+
   io.on('connection', (socket) => {
+
+
+    // =========================
+    // KULLANICI GİRİŞİ
+    // =========================
 
     socket.on('login', (data) => {
 
@@ -49,25 +55,34 @@ function socketLogin() {
         longitude
       } = data;
 
+
       // Kullanıcıyı kaydet
       users[phoneNumber] = socket.id;
+
       socket.phoneNumber = phoneNumber;
+
 
       // Kullanıcının konumunu kaydet
       if (
         typeof latitude === 'number' &&
         typeof longitude === 'number'
       ) {
+
         userLocations[phoneNumber] = {
           latitude,
           longitude
         };
+
       }
+
 
       // Güvercin durumu
       if (!pigeonState[phoneNumber]) {
+
         pigeonState[phoneNumber] = 'home';
+
       }
+
 
       // Kullanıcının mesaj geçmişi
       const userHistory = messageHistory.filter(
@@ -76,52 +91,79 @@ function socketLogin() {
           m.receiverPhone === phoneNumber
       );
 
+
       socket.emit('login success', {
+
         phoneNumber,
+
         history: userHistory,
-        pigeonState: pigeonState[phoneNumber]
+
+        pigeonState:
+          pigeonState[phoneNumber]
+
       });
+
 
       console.log(
         `📍 ${phoneNumber} giriş yaptı:`,
         userLocations[phoneNumber]
       );
+
     });
 
 
-    // KULLANICI KONUMU GÜNCELLEDİ
+
+    // =========================
+    // KONUM GÜNCELLEME
+    // =========================
+
     socket.on('update location', (data) => {
 
-      const phoneNumber = socket.phoneNumber;
+      const phoneNumber =
+        socket.phoneNumber;
 
       if (!phoneNumber) return;
+
 
       const {
         latitude,
         longitude
       } = data;
 
+
       if (
         typeof latitude !== 'number' ||
         typeof longitude !== 'number'
       ) {
+
         return;
+
       }
 
+
       userLocations[phoneNumber] = {
+
         latitude,
+
         longitude
+
       };
+
 
       console.log(
         `📍 ${phoneNumber} konumunu güncelledi:`,
         latitude,
         longitude
       );
+
     });
 
 
+
+    // =========================
     // GÜVERCİN GÖNDER
+    // =========================
+
     socket.on('send pigeon', (data) => {
 
       const {
@@ -130,9 +172,11 @@ function socketLogin() {
         message
       } = data;
 
+
       // Gönderenin konumu
       const senderLocation =
         userLocations[senderPhone];
+
 
       // Alıcının konumu
       const receiverLocation =
@@ -142,10 +186,15 @@ function socketLogin() {
       // Gönderenin konumu yoksa
       if (!senderLocation) {
 
-        return socket.emit('pigeon error', {
-          message:
-            'Senin konumun henüz alınamadı. Konum iznini açıp tekrar dene.'
-        });
+        return socket.emit(
+          'pigeon error',
+          {
+
+            message:
+              'Senin konumun henüz alınamadı. Konum iznini açıp tekrar dene.'
+
+          }
+        );
 
       }
 
@@ -153,51 +202,76 @@ function socketLogin() {
       // Alıcının konumu yoksa
       if (!receiverLocation) {
 
-        return socket.emit('pigeon error', {
-          message:
-            'Alıcının konumu henüz kayıtlı değil. Alıcının Messenger’a giriş yapması gerekiyor.'
-        });
+        return socket.emit(
+          'pigeon error',
+          {
+
+            message:
+              'Alıcının konumu henüz kayıtlı değil. Alıcının Messenger’a giriş yapması gerekiyor.'
+
+          }
+        );
 
       }
 
 
       // Güvercin meşgul mü?
-      if (pigeonState[senderPhone] === 'busy') {
+      if (
+        pigeonState[senderPhone] === 'busy'
+      ) {
 
-        return socket.emit('pigeon error', {
-          message:
-            'Güvercinin şu an yolda! Teslimatı tamamlamasını beklemelisin.'
-        });
+        return socket.emit(
+          'pigeon error',
+          {
+
+            message:
+              'Güvercinin şu an yolda! Teslimatı tamamlamasını beklemelisin.'
+
+          }
+        );
 
       }
 
 
+      // Güvercin gönderiliyor
       pigeonState[senderPhone] = 'busy';
 
 
+
+      // =========================
       // GERÇEK MESAFE
-      const distance = calculateDistance(
-        senderLocation.latitude,
-        senderLocation.longitude,
+      // =========================
 
-        receiverLocation.latitude,
-        receiverLocation.longitude
-      );
+      const distance =
+        calculateDistance(
+
+          senderLocation.latitude,
+          senderLocation.longitude,
+
+          receiverLocation.latitude,
+          receiverLocation.longitude
+
+        );
 
 
-      const flightTimeInSeconds = Math.round(distance * 60);
+      // ARTIK UÇUŞ SÜRESİ YOK
+      const flightTimeInSeconds = 0;
 
 
       const timestamp =
         new Date().toLocaleTimeString(
           [],
           {
+
             hour: '2-digit',
+
             minute: '2-digit'
+
           }
         );
 
 
+      // Yeni mesaj
       const newMsg = {
 
         id: Date.now(),
@@ -215,11 +289,12 @@ function socketLogin() {
           timestamp,
 
         status:
-          'yolda'
+          'teslim edildi'
 
       };
 
 
+      // Geçmişe ekle
       messageHistory.push(newMsg);
 
 
@@ -232,11 +307,14 @@ function socketLogin() {
       );
 
       console.log(
-        `⏱️ Uçuş: ${flightTimeInSeconds} saniye`
+        `⚡ Mesaj anında teslim ediliyor`
       );
 
 
-      // GÖNDERENE GÜVERCİNİN ÇIKTIĞINI BİLDİR
+      // =========================
+      // GÖNDERENE BİLDİR
+      // =========================
+
       socket.emit(
         'pigeon status',
         {
@@ -255,54 +333,53 @@ function socketLogin() {
       );
 
 
-      // UÇUŞ
-      setTimeout(() => {
+      // =========================
+      // ALICIYA ANINDA GÖNDER
+      // =========================
 
-        newMsg.status =
-          'teslim edildi';
-
-
-        pigeonState[senderPhone] =
-          'home';
+      const receiverSocketId =
+        users[receiverPhone];
 
 
-        // Alıcı çevrimiçiyse mesajı gönder
-        const receiverSocketId =
-          users[receiverPhone];
+      if (receiverSocketId) {
+
+        io.to(receiverSocketId).emit(
+          'pigeon arrived',
+          newMsg
+        );
+
+      }
 
 
-        if (receiverSocketId) {
+      // Güvercin hemen hazır
+      pigeonState[senderPhone] =
+        'home';
 
-          io.to(receiverSocketId).emit(
-            'pigeon arrived',
-            newMsg
-          );
+
+      // Gönderene bilgi
+      socket.emit(
+        'pigeon delivered',
+        {
+
+          message:
+            'Güvercin mesajı teslim etti ve tekrar hazır! 🕊️'
 
         }
+      );
 
 
-        // Gönderene bilgi
-        socket.emit(
-          'pigeon delivered',
-          {
-
-            message:
-              'Güvercin mesajı teslim etti ve tekrar hazır! 🕊️'
-
-          }
-        );
-
-
-        console.log(
-          `✅ Mesaj teslim edildi: ${senderPhone} → ${receiverPhone}`
-        );
-
-      }, flightTimeInSeconds * 1000);
+      console.log(
+        `✅ Mesaj teslim edildi: ${senderPhone} → ${receiverPhone}`
+      );
 
     });
 
 
+
+    // =========================
     // BAĞLANTI KESİLDİ
+    // =========================
+
     socket.on('disconnect', () => {
 
       if (socket.phoneNumber) {
@@ -310,6 +387,7 @@ function socketLogin() {
         delete users[
           socket.phoneNumber
         ];
+
 
         console.log(
           `🔴 ${socket.phoneNumber} bağlantıyı kesti`
@@ -320,10 +398,26 @@ function socketLogin() {
     });
 
   });
+
 }
 
-const PORT = process.env.PORT || 3001;
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🕊️ Güvercin Sunucusu Hazır: ${PORT}`);
-});
+// =========================
+// SUNUCU
+// =========================
+
+const PORT =
+  process.env.PORT || 3001;
+
+
+server.listen(
+  PORT,
+  '0.0.0.0',
+  () => {
+
+    console.log(
+      `🕊️ Güvercin Sunucusu Hazır: ${PORT}`
+    );
+
+  }
+);
