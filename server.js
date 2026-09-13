@@ -11,6 +11,7 @@ app.use(express.static('public'));
 // Firebase Realtime Database Adresleri
 const FIREBASE_MESSAGES_URL = "https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/messages.json";
 const FIREBASE_USERS_URL = "https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/users.json";
+const FIREBASE_LOCATIONS_URL = "https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/locations.json";
 
 // Firebase'den tüm mesajları okuma
 async function loadMessages() {
@@ -52,7 +53,7 @@ async function loadUserNamesFromFirebase() {
   }
 }
 
-// Firebase'e kullanıcı ismini kalıcı olarak kaydetme
+// Firebase'e kullanıcı ismini kaydetme
 async function saveUserNameToFirebase(phone, name) {
   try {
     const userUrl = `https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/users/${phone}.json`;
@@ -61,14 +62,39 @@ async function saveUserNameToFirebase(phone, name) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(name)
     });
-    console.log(`✅ ${phone} kullanıcısının ismi Firebase'e kaydedildi: ${name}`);
   } catch (err) {
     console.error('Firebase isim kaydetme hatası:', err);
   }
 }
 
-const users = {};
-const userNames = {}; // Bellekteki isimler
+// Firebase'den konumları okuma
+async function loadLocationsFromFirebase() {
+  try {
+    const response = await fetch(FIREBASE_LOCATIONS_URL);
+    if (!response.ok) return {};
+    const data = await response.json();
+    return data || {};
+  } catch (err) {
+    console.error('Firebase konum okuma hatası:', err);
+    return {};
+  }
+}
+
+// Firebase'e konum kaydetme
+async function saveLocationToFirebase(phone, location) {
+  try {
+    const locUrl = `https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/locations/${phone}.json`;
+    await fetch(locUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(location)
+    });
+  } catch (err) {
+    console.error('Firebase konum kaydetme hatası:', err);
+  }
+}
+
+const userNames = {};
 const userLocations = {};
 const pigeonState = {};
 
@@ -93,214 +119,178 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
-socketLogin();
+io.on('connection', (socket) => {
 
-function socketLogin() {
+  // =========================
+  // KULLANICI GİRİŞİ
+  // =========================
+  socket.on('login', async (data) => {
+    const { phoneNumber, latitude, longitude } = data;
+    if (!phoneNumber) return;
 
-  io.on('connection', (socket) => {
+    socket.phoneNumber = phoneNumber;
 
-    // =========================
-    // KULLANICI GİRİŞİ
-    // =========================
-    socket.on('login', async (data) => {
+    // Kullanıcıyı kendi telefon numarasına özel odaya dahil et (Kritik Düzeltme)
+    socket.join(phoneNumber);
 
-      const {
-        phoneNumber,
-        latitude,
-        longitude
-      } = data;
+    // Firebase verilerini çek
+    const [firebaseNames, firebaseLocations] = await Promise.all([
+      loadUserNamesFromFirebase(),
+      loadLocationsFromFirebase()
+    ]);
 
-      // Kullanıcıyı kaydet
-      users[phoneNumber] = socket.id;
-      socket.phoneNumber = phoneNumber;
+    userNames[phoneNumber] = firebaseNames[phoneNumber] || userNames[phoneNumber] || phoneNumber;
 
-      // Firebase'den kayıtlı isimleri çek
-      const firebaseNames = await loadUserNamesFromFirebase();
-      
-      // Eğer Firebase'de daha önce kaydedilmiş ismi varsa onu yükle, yoksa numarasını kullan
-      userNames[phoneNumber] = firebaseNames[phoneNumber] || userNames[phoneNumber] || phoneNumber;
+    // Konum güncellemesi ve kalıcı kaydı
+    if (typeof latitude === 'number' && typeof longitude === 'number') {
+      const locObj = { latitude, longitude };
+      userLocations[phoneNumber] = locObj;
+      await saveLocationToFirebase(phoneNumber, locObj);
+    } else if (firebaseLocations[phoneNumber]) {
+      userLocations[phoneNumber] = firebaseLocations[phoneNumber];
+    }
 
-      // Kullanıcının konumunu kaydet
-      if (
-        typeof latitude === 'number' &&
-        typeof longitude === 'number'
-      ) {
-        userLocations[phoneNumber] = {
-          latitude,
-          longitude
-        };
+    if (!pigeonState[phoneNumber]) {
+      pigeonState[phoneNumber] = 'home';
+    }
+
+    const allMessages = await loadMessages();
+    const userHistory = allMessages.filter(
+      (m) => m.senderPhone === phoneNumber || m.receiverPhone === phoneNumber
+    );
+
+    socket.emit('login success', {
+      phoneNumber,
+      name: userNames[phoneNumber],
+      userNamesMap: { ...firebaseNames, ...userNames },
+      history: userHistory,
+      pigeonState: pigeonState[phoneNumber]
+    });
+
+    console.log(`📍 ${phoneNumber} (${userNames[phoneNumber]}) giriş yaptı ve odaya katıldı.`);
+  });
+
+  // =========================
+  // İSİM GÜNCELLEME
+  // =========================
+  socket.on('update name', async (data) => {
+    const phoneNumber = socket.phoneNumber;
+    if (!phoneNumber) return;
+
+    const newName = data.name ? data.name.trim() : phoneNumber;
+    userNames[phoneNumber] = newName || phoneNumber;
+
+    await saveUserNameToFirebase(phoneNumber, userNames[phoneNumber]);
+
+    io.emit('user name updated', {
+      phoneNumber,
+      name: userNames[phoneNumber]
+    });
+  });
+
+  // =========================
+  // KONUM GÜNCELLEME
+  // =========================
+  socket.on('update location', async (data) => {
+    const phoneNumber = socket.phoneNumber;
+    if (!phoneNumber) return;
+
+    const { latitude, longitude } = data;
+    if (typeof latitude !== 'number' || typeof longitude !== 'number') return;
+
+    const locObj = { latitude, longitude };
+    userLocations[phoneNumber] = locObj;
+    await saveLocationToFirebase(phoneNumber, locObj);
+  });
+
+  // =========================
+  // GÜVERCİN GÖNDER
+  // =========================
+  socket.on('send pigeon', async (data) => {
+    const { senderPhone, receiverPhone, message } = data;
+
+    // Firebase'den güncel konumları kontrol et
+    if (!userLocations[receiverPhone]) {
+      const firebaseLocations = await loadLocationsFromFirebase();
+      if (firebaseLocations[receiverPhone]) {
+        userLocations[receiverPhone] = firebaseLocations[receiverPhone];
       }
+    }
 
-      // Güvercin durumu
-      if (!pigeonState[phoneNumber]) {
-        pigeonState[phoneNumber] = 'home';
-      }
+    const senderLocation = userLocations[senderPhone];
+    const receiverLocation = userLocations[receiverPhone];
 
-      // Firebase'den kullanıcı geçmişini çek
-      const allMessages = await loadMessages();
-      const userHistory = allMessages.filter(
-        (m) =>
-          m.senderPhone === phoneNumber ||
-          m.receiverPhone === phoneNumber
-      );
-
-      socket.emit('login success', {
-        phoneNumber,
-        name: userNames[phoneNumber],
-        userNamesMap: { ...firebaseNames, ...userNames },
-        history: userHistory,
-        pigeonState: pigeonState[phoneNumber]
+    if (pigeonState[senderPhone] === 'busy') {
+      return socket.emit('pigeon error', {
+        message: 'Güvercinin şu an yolda! Teslimatı tamamlamasını beklemelisin.'
       });
+    }
 
-      console.log(
-        `📍 ${phoneNumber} (${userNames[phoneNumber]}) giriş yaptı.`
-      );
-
-    });
-
-    // =========================
-    // İSİM GÜNCELLEME (KALICI)
-    // =========================
-    socket.on('update name', async (data) => {
-
-      const phoneNumber = socket.phoneNumber;
-      if (!phoneNumber) return;
-
-      const newName = data.name ? data.name.trim() : phoneNumber;
-      userNames[phoneNumber] = newName || phoneNumber;
-
-      // Firebase'e kalıcı olarak yaz
-      await saveUserNameToFirebase(phoneNumber, userNames[phoneNumber]);
-
-      // Tüm kullanıcılara yeni ismi bildir
-      io.emit('user name updated', {
-        phoneNumber,
-        name: userNames[phoneNumber]
-      });
-
-    });
-
-    // =========================
-    // KONUM GÜNCELLEME
-    // =========================
-    socket.on('update location', (data) => {
-
-      const phoneNumber = socket.phoneNumber;
-      if (!phoneNumber) return;
-
-      const { latitude, longitude } = data;
-
-      if (
-        typeof latitude !== 'number' ||
-        typeof longitude !== 'number'
-      ) {
-        return;
-      }
-
-      userLocations[phoneNumber] = { latitude, longitude };
-
-    });
-
-    // =========================
-    // GÜVERCİN GÖNDER
-    // =========================
-    socket.on('send pigeon', async (data) => {
-
-      const {
-        senderPhone,
-        receiverPhone,
-        message
-      } = data;
-
-      const senderLocation = userLocations[senderPhone];
-      const receiverLocation = userLocations[receiverPhone];
-
-      if (!senderLocation) {
-        return socket.emit('pigeon error', {
-          message: 'Senin konumun henüz alınamadı. Konum iznini açıp tekrar dene.'
-        });
-      }
-
-      if (!receiverLocation) {
-        return socket.emit('pigeon error', {
-          message: 'Alıcının konumu henüz kayıtlı değil. Alıcının Messenger’a giriş yapması gerekiyor.'
-        });
-      }
-
-      if (pigeonState[senderPhone] === 'busy') {
-        return socket.emit('pigeon error', {
-          message: 'Güvercinin şu an yolda! Teslimatı tamamlamasını beklemelisin.'
-        });
-      }
-
-      pigeonState[senderPhone] = 'busy';
-
-      const distance = calculateDistance(
+    // Mesafe hesaplama
+    let distanceText = "Bilinmiyor";
+    if (senderLocation && receiverLocation) {
+      const dist = calculateDistance(
         senderLocation.latitude,
         senderLocation.longitude,
         receiverLocation.latitude,
         receiverLocation.longitude
       );
+      distanceText = dist.toFixed(2);
+    } else if (senderLocation && !receiverLocation) {
+      distanceText = "0.00";
+    }
 
-      const flightTimeInSeconds = 0;
+    pigeonState[senderPhone] = 'busy';
 
-      const timestamp = new Date().toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-
-      const newMsg = {
-        id: Date.now(),
-        senderPhone,
-        senderName: userNames[senderPhone] || senderPhone,
-        receiverPhone,
-        message,
-        distance: distance.toFixed(2),
-        time: timestamp,
-        status: 'teslim edildi'
-      };
-
-      await saveMessage(newMsg);
-
-      socket.emit('pigeon status', {
-        receiverPhone,
-        distance: newMsg.distance,
-        flightTimeInSeconds,
-        messageData: newMsg
-      });
-
-      const receiverSocketId = users[receiverPhone];
-      if (receiverSocketId) {
-        io.to(receiverSocketId).emit('pigeon arrived', newMsg);
-      }
-
-      pigeonState[senderPhone] = 'home';
-
-      socket.emit('pigeon delivered', {
-        message: 'Güvercin mesajı teslim etti ve tekrar hazır! 🕊️'
-      });
-
-      console.log(
-        `✅ Mesaj teslim edildi: ${userNames[senderPhone]} (${senderPhone}) → ${receiverPhone}`
-      );
-
+    const timestamp = new Date().toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit'
     });
 
-    // =========================
-    // BAĞLANTI KESİLDİ
-    // =========================
-    socket.on('disconnect', () => {
+    const newMsg = {
+      id: Date.now(),
+      senderPhone,
+      senderName: userNames[senderPhone] || senderPhone,
+      receiverPhone,
+      message,
+      distance: distanceText,
+      time: timestamp,
+      status: 'teslim edildi'
+    };
 
-      if (socket.phoneNumber) {
-        delete users[socket.phoneNumber];
-        console.log(`🔴 ${socket.phoneNumber} bağlantıyı kesti`);
-      }
+    // Mesajı veritabanına kaydet
+    await saveMessage(newMsg);
 
+    // Gönderene ilet
+    socket.emit('pigeon status', {
+      receiverPhone,
+      distance: newMsg.distance,
+      flightTimeInSeconds: 0,
+      messageData: newMsg
     });
 
+    // Alıcının oda adresine anında gönder (Sayfa yenilense dahi bağlantı odaya bağlandığından kaybolmaz)
+    io.to(receiverPhone).emit('pigeon arrived', newMsg);
+
+    pigeonState[senderPhone] = 'home';
+
+    socket.emit('pigeon delivered', {
+      message: 'Güvercin mesajı teslim etti ve tekrar hazır! 🕊️'
+    });
+
+    console.log(`✅ Mesaj iletildi ve kaydedildi: ${senderPhone} → ${receiverPhone}`);
   });
 
-}
+  // =========================
+  // BAĞLANTI KESİLDİ
+  // =========================
+  socket.on('disconnect', () => {
+    if (socket.phoneNumber) {
+      console.log(`🔴 ${socket.phoneNumber} bağlantıyı kesti.`);
+    }
+  });
+
+});
 
 // =========================
 // SUNUCU
