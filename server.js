@@ -8,18 +8,19 @@ const io = new Server(server);
 
 app.use(express.static('public'));
 
-// Firebase Realtime Database Adresi
-const FIREBASE_URL = "https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/messages.json";
+// Firebase Realtime Database Adresleri
+const FIREBASE_MESSAGES_URL = "https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/messages.json";
+const FIREBASE_USERS_URL = "https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/users.json";
 
 // Firebase'den tüm mesajları okuma
 async function loadMessages() {
   try {
-    const response = await fetch(FIREBASE_URL);
+    const response = await fetch(FIREBASE_MESSAGES_URL);
     if (!response.ok) return [];
     const data = await response.json();
     return data ? Object.values(data) : [];
   } catch (err) {
-    console.error('Firebase okuma hatası:', err);
+    console.error('Firebase mesaj okuma hatası:', err);
     return [];
   }
 }
@@ -27,19 +28,47 @@ async function loadMessages() {
 // Firebase'e yeni mesaj kaydetme
 async function saveMessage(newMsg) {
   try {
-    await fetch(FIREBASE_URL, {
+    await fetch(FIREBASE_MESSAGES_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newMsg)
     });
     console.log('✅ Mesaj Firebase veritabanına kaydedildi.');
   } catch (err) {
-    console.error('Firebase kaydetme hatası:', err);
+    console.error('Firebase mesaj kaydetme hatası:', err);
+  }
+}
+
+// Firebase'den kayıtlı kullanıcı isimlerini okuma
+async function loadUserNamesFromFirebase() {
+  try {
+    const response = await fetch(FIREBASE_USERS_URL);
+    if (!response.ok) return {};
+    const data = await response.json();
+    return data || {};
+  } catch (err) {
+    console.error('Firebase isim okuma hatası:', err);
+    return {};
+  }
+}
+
+// Firebase'e kullanıcı ismini kalıcı olarak kaydetme
+async function saveUserNameToFirebase(phone, name) {
+  try {
+    const userUrl = `https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/users/${phone}.json`;
+    await fetch(userUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(name)
+    });
+    console.log(`✅ ${phone} kullanıcısının ismi Firebase'e kaydedildi: ${name}`);
+  } catch (err) {
+    console.error('Firebase isim kaydetme hatası:', err);
   }
 }
 
 const users = {};
-const userNames = {}; // Numaralara karşılık gelen isim deposu
+const userNames = {}; // Bellekteki isimler
 const userLocations = {};
 const pigeonState = {};
 
@@ -85,10 +114,11 @@ function socketLogin() {
       users[phoneNumber] = socket.id;
       socket.phoneNumber = phoneNumber;
 
-      // Varsayılan isim olarak telefon numarasını ata (değiştirilmediyse)
-      if (!userNames[phoneNumber]) {
-        userNames[phoneNumber] = phoneNumber;
-      }
+      // Firebase'den kayıtlı isimleri çek
+      const firebaseNames = await loadUserNamesFromFirebase();
+      
+      // Eğer Firebase'de daha önce kaydedilmiş ismi varsa onu yükle, yoksa numarasını kullan
+      userNames[phoneNumber] = firebaseNames[phoneNumber] || userNames[phoneNumber] || phoneNumber;
 
       // Kullanıcının konumunu kaydet
       if (
@@ -117,22 +147,21 @@ function socketLogin() {
       socket.emit('login success', {
         phoneNumber,
         name: userNames[phoneNumber],
-        userNamesMap: userNames,
+        userNamesMap: { ...firebaseNames, ...userNames },
         history: userHistory,
         pigeonState: pigeonState[phoneNumber]
       });
 
       console.log(
-        `📍 ${phoneNumber} giriş yaptı:`,
-        userLocations[phoneNumber]
+        `📍 ${phoneNumber} (${userNames[phoneNumber]}) giriş yaptı.`
       );
 
     });
 
     // =========================
-    // İSİM GÜNCELLEME
+    // İSİM GÜNCELLEME (KALICI)
     // =========================
-    socket.on('update name', (data) => {
+    socket.on('update name', async (data) => {
 
       const phoneNumber = socket.phoneNumber;
       if (!phoneNumber) return;
@@ -140,9 +169,10 @@ function socketLogin() {
       const newName = data.name ? data.name.trim() : phoneNumber;
       userNames[phoneNumber] = newName || phoneNumber;
 
-      console.log(`👤 ${phoneNumber} ismini güncelledi: ${userNames[phoneNumber]}`);
+      // Firebase'e kalıcı olarak yaz
+      await saveUserNameToFirebase(phoneNumber, userNames[phoneNumber]);
 
-      // Tüm bağlı kullanıcılara isim güncellemesini duyur
+      // Tüm kullanıcılara yeni ismi bildir
       io.emit('user name updated', {
         phoneNumber,
         name: userNames[phoneNumber]
@@ -168,12 +198,6 @@ function socketLogin() {
       }
 
       userLocations[phoneNumber] = { latitude, longitude };
-
-      console.log(
-        `📍 ${phoneNumber} konumunu güncelledi:`,
-        latitude,
-        longitude
-      );
 
     });
 
@@ -257,7 +281,7 @@ function socketLogin() {
       });
 
       console.log(
-        `✅ Mesaj teslim edildi: ${senderPhone} (${userNames[senderPhone]}) → ${receiverPhone}`
+        `✅ Mesaj teslim edildi: ${userNames[senderPhone]} (${senderPhone}) → ${receiverPhone}`
       );
 
     });

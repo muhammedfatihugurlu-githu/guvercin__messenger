@@ -706,7 +706,7 @@
       <input
         id="my-name-input"
         type="text"
-        placeholder="Ekran Isminizi Girin..."
+        placeholder="Ekran İsminizi Girin..."
         maxlength="25"
       />
 
@@ -847,7 +847,7 @@
 
   let contacts = new Set();
 
-  let userNamesMap = {}; // Numaraların isimlerini saklayan obje
+  let userNamesMap = {};
 
   let myLat = null;
 
@@ -920,7 +920,7 @@
         'Giriş Yap';
 
       status.innerText =
-        '❌ Bu tarayıcı konum mekiğini desteklemiyor.';
+        '❌ Bu tarayıcı konum özelliğini desteklemiyor.';
 
       return;
 
@@ -945,10 +945,6 @@
         );
 
 
-        /* =========================
-           SERVER'A GİRİŞ
-        ========================= */
-
         socket.emit('login', {
 
           phoneNumber: myPhone,
@@ -959,10 +955,6 @@
 
         });
 
-
-        /* =========================
-           KONUMU TAKİP ET
-        ========================= */
 
         startLocationTracking();
 
@@ -999,7 +991,7 @@
 
 
   /* =========================
-     İSİM GÜNCELLE
+     İSİM GÜNCELLE VE SAKLA
   ========================= */
 
   function saveMyName() {
@@ -1015,11 +1007,15 @@
     myName = newName;
     userNamesMap[myPhone] = newName;
 
+    // Cihaz hafızasına yedekle
+    localStorage.setItem('pigeon_name_' + myPhone, newName);
+
+    // Sunucuya ve Firebase'e gönder
     socket.emit('update name', {
       name: newName
     });
 
-    alert('İsminiz başarıyla güncellendi! 🕊️');
+    alert('İsminiz kalıcı olarak kaydedildi! 🕊️');
     renderContacts();
     if (activeContact) {
       renderActiveChat();
@@ -1128,16 +1124,16 @@
         data.phoneNumber;
 
 
-      myName = data.name || data.phoneNumber;
-      document.getElementById('my-name-input').value = myName !== myPhone ? myName : '';
+      // Firebase veya yerel hafızadaki ismi al
+      const localSavedName = localStorage.getItem('pigeon_name_' + myPhone);
+      myName = data.name || localSavedName || myPhone;
+      
+      // İsmi girdi kutusuna otomatik yaz
+      document.getElementById('my-name-input').value = (myName !== myPhone) ? myName : '';
 
       userNamesMap = data.userNamesMap || {};
       allMessages = data.history || [];
 
-
-      /* =========================
-         MESAJLARDAN KİŞİLERİ VE İSİMLERİ BUL
-      ========================= */
 
       allMessages.forEach(
         function(message) {
