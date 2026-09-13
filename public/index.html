@@ -226,17 +226,63 @@
 
       color: white;
 
-      padding: 16px;
+      padding: 14px 16px;
 
       font-weight: bold;
 
-      font-size: 17px;
+      font-size: 16px;
 
       display: flex;
 
       justify-content: space-between;
 
       align-items: center;
+    }
+
+    .profile-name-box {
+      padding: 10px;
+
+      background: #e7f5f0;
+
+      border-bottom: 1px solid #c2e5d9;
+
+      display: flex;
+
+      gap: 8px;
+
+      align-items: center;
+    }
+
+    .profile-name-box input {
+      flex: 1;
+
+      padding: 8px 10px;
+
+      border: 1px solid #00a884;
+
+      border-radius: 6px;
+
+      font-size: 13px;
+
+      outline: none;
+    }
+
+    .profile-name-box button {
+      background: #008069;
+
+      color: white;
+
+      border: none;
+
+      border-radius: 6px;
+
+      font-weight: bold;
+
+      padding: 8px 12px;
+
+      font-size: 12px;
+
+      cursor: pointer;
     }
 
     .add-contact-box {
@@ -307,10 +353,18 @@
       font-weight: bold;
     }
 
-    .contact-phone {
+    .contact-name {
       font-size: 15px;
 
       color: #111b21;
+
+      font-weight: 600;
+    }
+
+    .contact-phone {
+      font-size: 12px;
+
+      color: #667781;
     }
 
     .contact-last-msg {
@@ -409,6 +463,13 @@
       word-wrap: break-word;
 
       box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+    }
+
+    .msg-sender-name {
+      font-size: 11px;
+      font-weight: bold;
+      color: #008069;
+      margin-bottom: 3px;
     }
 
     .msg-outgoing {
@@ -629,13 +690,29 @@
     <div class="sidebar-header">
 
       <span>
-        🕊️ Güvercin - Muhammed Fatih Uğurlu 
+        🕊️ Güvercin Postası
       </span>
 
       <span
         id="my-phone-display"
         style="font-size:12px; opacity:0.9;"
       ></span>
+
+    </div>
+
+    <!-- İSİM BELİRLEME KUTUSU -->
+    <div class="profile-name-box">
+
+      <input
+        id="my-name-input"
+        type="text"
+        placeholder="Ekran Isminizi Girin..."
+        maxlength="20"
+      />
+
+      <button onclick="saveMyName()">
+        Kaydet
+      </button>
 
     </div>
 
@@ -762,11 +839,15 @@
 
   let myPhone = '';
 
+  let myName = '';
+
   let activeContact = null;
 
   let allMessages = [];
 
   let contacts = new Set();
+
+  let userNamesMap = {}; // Numaraların isimlerini saklayan obje
 
   let myLat = null;
 
@@ -839,7 +920,7 @@
         'Giriş Yap';
 
       status.innerText =
-        '❌ Bu tarayıcı konum özelliğini desteklemiyor.';
+        '❌ Bu tarayıcı konum mekiğini desteklemiyor.';
 
       return;
 
@@ -862,9 +943,6 @@
           myLat,
           myLng
         );
-
-
-        
 
 
         /* =========================
@@ -891,32 +969,61 @@
       },
 
 
-function(error) {
+      function(error) {
 
-  console.error(
-    'Konum hatası:',
-    error
-  );
+        console.error(
+          'Konum hatası:',
+          error
+        );
 
-  button.disabled = false;
-  button.innerText = 'Giriş Yap';
+        button.disabled = false;
+        button.innerText = 'Giriş Yap';
 
-  status.innerText =
-    '⚠️ Konum verilmedi. Konumsuz giriş yapılıyor...';
+        status.innerText =
+          '⚠️ Konum verilmedi. Konumsuz giriş yapılıyor...';
 
-  socket.emit('login', {
-    phoneNumber: myPhone,
-    latitude: null,
-    longitude: null
-  });
+        socket.emit('login', {
+          phoneNumber: myPhone,
+          latitude: null,
+          longitude: null
+        });
 
-},
-{
-  enableHighAccuracy: true,
-  timeout: 15000,
-  maximumAge: 0
-}
-);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0
+      }
+    );
+  }
+
+
+  /* =========================
+     İSİM GÜNCELLE
+  ========================= */
+
+  function saveMyName() {
+
+    const nameInput = document.getElementById('my-name-input');
+    const newName = nameInput.value.trim();
+
+    if (!newName) {
+      alert('Lütfen geçerli bir isim girin!');
+      return;
+    }
+
+    myName = newName;
+    userNamesMap[myPhone] = newName;
+
+    socket.emit('update name', {
+      name: newName
+    });
+
+    alert('İsminiz başarıyla güncellendi! 🕊️');
+    renderContacts();
+    if (activeContact) {
+      renderActiveChat();
+    }
   }
 
 
@@ -1021,12 +1128,15 @@ function(error) {
         data.phoneNumber;
 
 
-      allMessages =
-        data.history || [];
+      myName = data.name || data.phoneNumber;
+      document.getElementById('my-name-input').value = myName !== myPhone ? myName : '';
+
+      userNamesMap = data.userNamesMap || {};
+      allMessages = data.history || [];
 
 
       /* =========================
-         MESAJLARDAN KİŞİLERİ BUL
+         MESAJLARDAN KİŞİLERİ VE İSİMLERİ BUL
       ========================= */
 
       allMessages.forEach(
@@ -1037,6 +1147,9 @@ function(error) {
               ? message.receiverPhone
               : message.senderPhone;
 
+          if (message.senderPhone && message.senderName) {
+            userNamesMap[message.senderPhone] = message.senderName;
+          }
 
           if (other) {
 
@@ -1067,6 +1180,20 @@ function(error) {
 
     }
   );
+
+
+  /* =========================
+     KULLANICI İSMİ GÜNCELLENDİ
+  ========================= */
+
+  socket.on('user name updated', function(data) {
+    userNamesMap[data.phoneNumber] = data.name;
+    renderContacts();
+    if (activeContact === data.phoneNumber) {
+      document.getElementById('active-contact-title').innerText = `${data.name} (${data.phoneNumber})`;
+      renderActiveChat();
+    }
+  });
 
 
   /* =========================
@@ -1174,6 +1301,8 @@ function(error) {
     contacts.forEach(
       function(phone) {
 
+        const displayName = userNamesMap[phone] || phone;
+
         const item =
           document.createElement('div');
 
@@ -1224,6 +1353,10 @@ function(error) {
 
         item.innerHTML = `
 
+          <div class="contact-name">
+            ${escapeHtml(displayName)}
+          </div>
+
           <div class="contact-phone">
             ${escapeHtml(phone)}
           </div>
@@ -1255,10 +1388,11 @@ function(error) {
 
     activeContact = phone;
 
+    const displayName = userNamesMap[phone] || phone;
 
     document.getElementById(
       'active-contact-title'
-    ).innerText = phone;
+    ).innerText = `${displayName} (${phone})`;
 
 
     document.getElementById(
@@ -1408,6 +1542,7 @@ function(error) {
     const isOutgoing =
       msg.senderPhone === myPhone;
 
+    const senderDisplayName = msg.senderName || userNamesMap[msg.senderPhone] || msg.senderPhone;
 
     const bubble =
       document.createElement('div');
@@ -1422,6 +1557,8 @@ function(error) {
 
 
     bubble.innerHTML = `
+
+      ${!isOutgoing ? `<div class="msg-sender-name">${escapeHtml(senderDisplayName)}</div>` : ''}
 
       <div>
         ${escapeHtml(msg.message)}
@@ -1523,11 +1660,6 @@ function(error) {
 
     }
 
-
-    /* =========================
-       SUNUCUYA MESAJ
-       GERÇEK KONUMU SUNUCU BULACAK
-    ========================= */
 
     socket.emit(
       'send pigeon',
@@ -1771,6 +1903,11 @@ function(error) {
       );
 
 
+      if (msgData.senderName) {
+        userNamesMap[msgData.senderPhone] = msgData.senderName;
+      }
+
+
       contacts.add(
         msgData.senderPhone
       );
@@ -1850,6 +1987,21 @@ function(error) {
       }
     );
 
+
+  document
+    .getElementById('my-name-input')
+    .addEventListener(
+      'keypress',
+      function(e) {
+
+        if (e.key === 'Enter') {
+
+          saveMyName();
+
+        }
+
+      }
+    );
 
 </script>
 
