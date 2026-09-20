@@ -12,6 +12,7 @@ app.use(express.static('public'));
 const FIREBASE_MESSAGES_URL = "https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/messages.json";
 const FIREBASE_USERS_URL = "https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/users.json";
 const FIREBASE_LOCATIONS_URL = "https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/locations.json";
+const FIREBASE_PASSWORDS_URL = "https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/passwords.json";
 
 // Firebase'den tüm mesajları okuma
 async function loadMessages() {
@@ -94,8 +95,36 @@ async function saveLocationToFirebase(phone, location) {
   }
 }
 
+// Firebase'den şifreleri okuma
+async function loadPasswordsFromFirebase() {
+  try {
+    const response = await fetch(FIREBASE_PASSWORDS_URL);
+    if (!response.ok) return {};
+    const data = await response.json();
+    return data || {};
+  } catch (err) {
+    console.error('Firebase şifre okuma hatası:', err);
+    return {};
+  }
+}
+
+// Firebase'e şifre kaydetme
+async function savePasswordToFirebase(phone, password) {
+  try {
+    const passUrl = `https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/passwords/${phone}.json`;
+    await fetch(passUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(password)
+    });
+  } catch (err) {
+    console.error('Firebase şifre kaydetme hatası:', err);
+  }
+}
+
 const userNames = {};
 const userLocations = {};
+const userPasswords = {};
 const pigeonState = {};
 
 function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -122,15 +151,32 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 io.on('connection', (socket) => {
 
   // =========================
-  // KULLANICI GİRİŞİ
+  // KULLANICI GİRİŞİ VE ŞİFRE KONTROLÜ
   // =========================
   socket.on('login', async (data) => {
-    const { phoneNumber, latitude, longitude } = data;
-    if (!phoneNumber) return;
+    const { phoneNumber, password, latitude, longitude } = data;
+    if (!phoneNumber || !password) {
+      return socket.emit('login error', { message: 'Telefon numarası ve şifre zorunludur!' });
+    }
 
+    // Firebase'den güncel şifreleri çek
+    const firebasePasswords = await loadPasswordsFromFirebase();
+
+    if (firebasePasswords[phoneNumber]) {
+      // Kullanıcı var -> Şifre kontrolü yap
+      if (firebasePasswords[phoneNumber] !== password) {
+        return socket.emit('login error', { message: 'Girdiğiniz şifre yanlış!' });
+      }
+    } else {
+      // Kullanıcı ilk defa giriş yapıyor -> Kaydet
+      await savePasswordToFirebase(phoneNumber, password);
+      console.log(`🔑 Yeni kullanıcı kaydoldu: ${phoneNumber}`);
+    }
+
+    userPasswords[phoneNumber] = password;
     socket.phoneNumber = phoneNumber;
 
-    // Kullanıcıyı kendi telefon numarasına özel odaya dahil et (Kritik Düzeltme)
+    // Kullanıcıyı kendi telefon numarasına özel odaya dahil et
     socket.join(phoneNumber);
 
     // Firebase verilerini çek
@@ -167,7 +213,7 @@ io.on('connection', (socket) => {
       pigeonState: pigeonState[phoneNumber]
     });
 
-    console.log(`📍 ${phoneNumber} (${userNames[phoneNumber]}) giriş yaptı ve odaya katıldı.`);
+    console.log(`📍 ${phoneNumber} (${userNames[phoneNumber]}) başarıyla giriş yaptı.`);
   });
 
   // =========================
@@ -185,6 +231,40 @@ io.on('connection', (socket) => {
     io.emit('user name updated', {
       phoneNumber,
       name: userNames[phoneNumber]
+    });
+  });
+
+  // =========================
+  // ŞİFRE DEĞİŞTİRME
+  // =========================
+  socket.on('change password', async (data) => {
+    const phoneNumber = socket.phoneNumber;
+    if (!phoneNumber) return;
+
+    const { oldPassword, newPassword } = data;
+    const firebasePasswords = await loadPasswordsFromFirebase();
+    const currentPassword = firebasePasswords[phoneNumber] || userPasswords[phoneNumber];
+
+    if (currentPassword && currentPassword !== oldPassword) {
+      return socket.emit('password result', {
+        success: false,
+        message: 'Mevcut şifrenizi yanlış girdiniz!'
+      });
+    }
+
+    if (!newPassword || newPassword.trim() === '') {
+      return socket.emit('password result', {
+        success: false,
+        message: 'Yeni şifre boş bırakılamaz!'
+      });
+    }
+
+    userPasswords[phoneNumber] = newPassword;
+    await savePasswordToFirebase(phoneNumber, newPassword);
+
+    socket.emit('password result', {
+      success: true,
+      message: 'Şifreniz başarıyla değiştirildi! 🕊️'
     });
   });
 
@@ -269,7 +349,7 @@ io.on('connection', (socket) => {
       messageData: newMsg
     });
 
-    // Alıcının oda adresine anında gönder (Sayfa yenilense dahi bağlantı odaya bağlandığından kaybolmaz)
+    // Alıcının oda adresine anında gönder
     io.to(receiverPhone).emit('pigeon arrived', newMsg);
 
     pigeonState[senderPhone] = 'home';

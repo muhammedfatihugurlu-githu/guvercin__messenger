@@ -285,6 +285,53 @@
       cursor: pointer;
     }
 
+    /* ŞİFRE DEĞİŞTİRME KUTUSU */
+    .profile-password-box {
+      padding: 10px;
+
+      background: #f4faf8;
+
+      border-bottom: 1px solid #c2e5d9;
+
+      display: flex;
+
+      flex-direction: column;
+
+      gap: 6px;
+    }
+
+    .profile-password-box input {
+      width: 100%;
+
+      padding: 8px 10px;
+
+      border: 1px solid #00a884;
+
+      border-radius: 6px;
+
+      font-size: 13px;
+
+      outline: none;
+    }
+
+    .profile-password-box button {
+      background: #008069;
+
+      color: white;
+
+      border: none;
+
+      border-radius: 6px;
+
+      font-weight: bold;
+
+      padding: 8px 12px;
+
+      font-size: 12px;
+
+      cursor: pointer;
+    }
+
     .add-contact-box {
       padding: 10px;
 
@@ -643,7 +690,7 @@
 
       <div class="login-desc">
         Güvercinlerin doğru adrese uçabilmesi için
-        telefon numaranızı ve konumunuzu kullanıyoruz.
+        telefon numaranızı, şifrenizi ve konumunuzu kullanıyoruz.
       </div>
 
       <div class="input-group">
@@ -662,11 +709,26 @@
 
       </div>
 
+      <!-- ŞİFRE ALANI -->
+      <div class="input-group">
+
+        <label>
+          Şifre
+        </label>
+
+        <input
+          id="my-password"
+          type="password"
+          placeholder="Şifrenizi Girin"
+        />
+
+      </div>
+
       <button
         id="login-button"
         onclick="login()"
       >
-        Giriş Yap
+        Giriş Yap / Kayıt Ol
       </button>
 
       <div
@@ -712,6 +774,27 @@
 
       <button onclick="saveMyName()">
         Kaydet
+      </button>
+
+    </div>
+
+    <!-- İSİM YAZMA KISMININ ALTINDAKİ ŞİFRE DEĞİŞTİRME KUTUSU -->
+    <div class="profile-password-box">
+
+      <input
+        id="old-password-input"
+        type="password"
+        placeholder="Mevcut Şifre"
+      />
+
+      <input
+        id="new-password-input"
+        type="password"
+        placeholder="Yeni Şifre"
+      />
+
+      <button onclick="changePassword()">
+        Şifreyi Değiştir
       </button>
 
     </div>
@@ -875,17 +958,33 @@
 
   function login() {
 
-    const input =
+    const phoneInput =
       document.getElementById('my-phone');
 
+    const passInput =
+      document.getElementById('my-password');
+
     const phone =
-      input.value.trim();
+      phoneInput.value.trim();
+
+    const password =
+      passInput.value.trim();
 
 
     if (!isValidPhone(phone)) {
 
       alert(
         'Geçerli numara girin!\n\nÖrnek: 05551112233'
+      );
+
+      return;
+
+    }
+
+    if (!password) {
+
+      alert(
+        'Lütfen şifrenizi girin!'
       );
 
       return;
@@ -917,7 +1016,7 @@
       button.disabled = false;
 
       button.innerText =
-        'Giriş Yap';
+        'Giriş Yap / Kayıt Ol';
 
       status.innerText =
         '❌ Bu tarayıcı konum özelliğini desteklemiyor.';
@@ -949,6 +1048,8 @@
 
           phoneNumber: myPhone,
 
+          password: password,
+
           latitude: myLat,
 
           longitude: myLng
@@ -969,13 +1070,14 @@
         );
 
         button.disabled = false;
-        button.innerText = 'Giriş Yap';
+        button.innerText = 'Giriş Yap / Kayıt Ol';
 
         status.innerText =
           '⚠️ Konum verilmedi. Konumsuz giriş yapılıyor...';
 
         socket.emit('login', {
           phoneNumber: myPhone,
+          password: password,
           latitude: null,
           longitude: null
         });
@@ -1021,6 +1123,36 @@
       renderActiveChat();
     }
   }
+
+
+  /* =========================
+     ŞİFRE DEĞİŞTİR
+  ========================= */
+
+  function changePassword() {
+
+    const oldPassword = document.getElementById('old-password-input').value.trim();
+    const newPassword = document.getElementById('new-password-input').value.trim();
+
+    if (!newPassword) {
+      alert('Lütfen yeni şifrenizi girin!');
+      return;
+    }
+
+    socket.emit('change password', {
+      oldPassword: oldPassword,
+      newPassword: newPassword
+    });
+
+  }
+
+  socket.on('password result', function(data) {
+    alert(data.message);
+    if (data.success) {
+      document.getElementById('old-password-input').value = '';
+      document.getElementById('new-password-input').value = '';
+    }
+  });
 
 
   /* =========================
@@ -1197,8 +1329,27 @@
   ========================= */
 
   socket.on(
+    'login error',
+    function(data) {
+
+      const button = document.getElementById('login-button');
+      button.disabled = false;
+      button.innerText = 'Giriş Yap / Kayıt Ol';
+
+      alert(
+        data.message || 'Giriş başarısız.'
+      );
+
+    }
+  );
+
+  socket.on(
     'login failed',
     function(data) {
+
+      const button = document.getElementById('login-button');
+      button.disabled = false;
+      button.innerText = 'Giriş Yap / Kayıt Ol';
 
       alert(
         data.message || 'Giriş başarısız.'
@@ -1954,6 +2105,21 @@
 
   document
     .getElementById('my-phone')
+    .addEventListener(
+      'keypress',
+      function(e) {
+
+        if (e.key === 'Enter') {
+
+          login();
+
+        }
+
+      }
+    );
+
+  document
+    .getElementById('my-password')
     .addEventListener(
       'keypress',
       function(e) {
