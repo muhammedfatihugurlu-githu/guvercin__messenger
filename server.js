@@ -329,7 +329,9 @@ io.on('connection', (socket) => {
 
     pigeonState[senderPhone] = 'busy';
 
-    const timestamp = new Date().toLocaleTimeString([], {
+    // TÜRKİYE SAAT DİLİMİNE GÖRE DÜZELTİLDİ (Europe/Istanbul)
+    const timestamp = new Date().toLocaleTimeString('tr-TR', {
+      timeZone: 'Europe/Istanbul',
       hour: '2-digit',
       minute: '2-digit'
     });
@@ -365,7 +367,7 @@ io.on('connection', (socket) => {
       message: 'Güvercin mesajı teslim etti ve tekrar hazır! 🕊️'
     });
 
-    console.log(`✅ Mesaj iletildi ve kaydedildi: ${senderPhone} → ${receiverPhone}`);
+    console.log(`✅ Mesaj iletildi ve kaydedildi: ${senderPhone} → ${receiverPhone} (Saat: ${timestamp})`);
   });
 
   // =========================
