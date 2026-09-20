@@ -155,8 +155,14 @@ io.on('connection', (socket) => {
   // =========================
   socket.on('login', async (data) => {
     const { phoneNumber, password, latitude, longitude } = data;
+
     if (!phoneNumber || !password) {
       return socket.emit('login error', { message: 'Telefon numarası ve şifre zorunludur!' });
+    }
+
+    // Şifre uzunluk kontrolü (4 - 12 karakter)
+    if (password.length < 4 || password.length > 12) {
+      return socket.emit('login error', { message: 'Şifreniz en az 4, en fazla 12 karakter olmalıdır!' });
     }
 
     // Firebase'den güncel şifreleri çek
@@ -252,15 +258,16 @@ io.on('connection', (socket) => {
       });
     }
 
-    if (!newPassword || newPassword.trim() === '') {
+    const trimmedNewPass = newPassword ? newPassword.trim() : '';
+    if (trimmedNewPass.length < 4 || trimmedNewPass.length > 12) {
       return socket.emit('password result', {
         success: false,
-        message: 'Yeni şifre boş bırakılamaz!'
+        message: 'Yeni şifreniz en az 4, en fazla 12 karakter olmalıdır!'
       });
     }
 
-    userPasswords[phoneNumber] = newPassword;
-    await savePasswordToFirebase(phoneNumber, newPassword);
+    userPasswords[phoneNumber] = trimmedNewPass;
+    await savePasswordToFirebase(phoneNumber, trimmedNewPass);
 
     socket.emit('password result', {
       success: true,

@@ -713,13 +713,15 @@
       <div class="input-group">
 
         <label>
-          Şifre
+          Şifre (4-12 Karakter)
         </label>
 
         <input
           id="my-password"
           type="password"
           placeholder="Şifrenizi Girin"
+          minlength="4"
+          maxlength="12"
         />
 
       </div>
@@ -785,12 +787,16 @@
         id="old-password-input"
         type="password"
         placeholder="Mevcut Şifre"
+        minlength="4"
+        maxlength="12"
       />
 
       <input
         id="new-password-input"
         type="password"
-        placeholder="Yeni Şifre"
+        placeholder="Yeni Şifre (4-12 hane)"
+        minlength="4"
+        maxlength="12"
       />
 
       <button onclick="changePassword()">
@@ -981,10 +987,10 @@
 
     }
 
-    if (!password) {
+    if (!password || password.length < 4 || password.length > 12) {
 
       alert(
-        'Lütfen şifrenizi girin!'
+        'Şifreniz en az 4, en fazla 12 karakter olmalıdır!'
       );
 
       return;
@@ -1073,7 +1079,7 @@
         button.innerText = 'Giriş Yap / Kayıt Ol';
 
         status.innerText =
-          '⚠️ Konum verilmedi. Konumsuz giriş yapılıyor...';
+          'Konum verilmedi. Konumsuz giriş yapılıyor...';
 
         socket.emit('login', {
           phoneNumber: myPhone,
@@ -1134,8 +1140,13 @@
     const oldPassword = document.getElementById('old-password-input').value.trim();
     const newPassword = document.getElementById('new-password-input').value.trim();
 
-    if (!newPassword) {
-      alert('Lütfen yeni şifrenizi girin!');
+    if (!oldPassword) {
+      alert('Lütfen mevcut şifrenizi girin!');
+      return;
+    }
+
+    if (!newPassword || newPassword.length < 4 || newPassword.length > 12) {
+      alert('Yeni şifreniz en az 4, en fazla 12 karakter olmalıdır!');
       return;
     }
 
@@ -1259,7 +1270,7 @@
       // Firebase veya yerel hafızadaki ismi al
       const localSavedName = localStorage.getItem('pigeon_name_' + myPhone);
       myName = data.name || localSavedName || myPhone;
-      
+
       // İsmi girdi kutusuna otomatik yaz
       document.getElementById('my-name-input').value = (myName !== myPhone) ? myName : '';
 
