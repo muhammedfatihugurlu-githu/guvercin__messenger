@@ -11,7 +11,6 @@ app.use(express.static('public'));
 // Firebase Realtime Database Adresleri
 const FIREBASE_MESSAGES_URL = "https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/messages.json";
 const FIREBASE_USERS_URL = "https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/users.json";
-const FIREBASE_LOCATIONS_URL = "https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/locations.json";
 const FIREBASE_PASSWORDS_URL = "https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/passwords.json";
 
 // Firebase'den tüm mesajları okuma
@@ -68,33 +67,6 @@ async function saveUserNameToFirebase(phone, name) {
   }
 }
 
-// Firebase'den konumları okuma
-async function loadLocationsFromFirebase() {
-  try {
-    const response = await fetch(FIREBASE_LOCATIONS_URL);
-    if (!response.ok) return {};
-    const data = await response.json();
-    return data || {};
-  } catch (err) {
-    console.error('Firebase konum okuma hatası:', err);
-    return {};
-  }
-}
-
-// Firebase'e konum kaydetme
-async function saveLocationToFirebase(phone, location) {
-  try {
-    const locUrl = `https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/locations/${phone}.json`;
-    await fetch(locUrl, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(location)
-    });
-  } catch (err) {
-    console.error('Firebase konum kaydetme hatası:', err);
-  }
-}
-
 // Firebase'den şifreleri okuma
 async function loadPasswordsFromFirebase() {
   try {
@@ -123,30 +95,8 @@ async function savePasswordToFirebase(phone, password) {
 }
 
 const userNames = {};
-const userLocations = {};
 const userPasswords = {};
 const pigeonState = {};
-
-function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371;
-
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) *
-    Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLon / 2) *
-    Math.sin(dLon / 2);
-
-  const c = 2 * Math.atan2(
-    Math.sqrt(a),
-    Math.sqrt(1 - a)
-  );
-
-  return R * c;
-}
 
 io.on('connection', (socket) => {
 
@@ -154,7 +104,7 @@ io.on('connection', (socket) => {
   // KULLANICI GİRİŞİ VE ŞİFRE KONTROLÜ
   // =========================
   socket.on('login', async (data) => {
-    const { phoneNumber, password, latitude, longitude } = data;
+    const { phoneNumber, password } = data;
 
     if (!phoneNumber || !password) {
       return socket.emit('login error', { message: 'Telefon numarası ve şifre zorunludur!' });
@@ -185,22 +135,10 @@ io.on('connection', (socket) => {
     // Kullanıcıyı kendi telefon numarasına özel odaya dahil et
     socket.join(phoneNumber);
 
-    // Firebase verilerini çek
-    const [firebaseNames, firebaseLocations] = await Promise.all([
-      loadUserNamesFromFirebase(),
-      loadLocationsFromFirebase()
-    ]);
+    // Firebase isim verilerini çek
+    const firebaseNames = await loadUserNamesFromFirebase();
 
     userNames[phoneNumber] = firebaseNames[phoneNumber] || userNames[phoneNumber] || phoneNumber;
-
-    // Konum güncellemesi ve kalıcı kaydı
-    if (typeof latitude === 'number' && typeof longitude === 'number') {
-      const locObj = { latitude, longitude };
-      userLocations[phoneNumber] = locObj;
-      await saveLocationToFirebase(phoneNumber, locObj);
-    } else if (firebaseLocations[phoneNumber]) {
-      userLocations[phoneNumber] = firebaseLocations[phoneNumber];
-    }
 
     if (!pigeonState[phoneNumber]) {
       pigeonState[phoneNumber] = 'home';
@@ -276,36 +214,10 @@ io.on('connection', (socket) => {
   });
 
   // =========================
-  // KONUM GÜNCELLEME
-  // =========================
-  socket.on('update location', async (data) => {
-    const phoneNumber = socket.phoneNumber;
-    if (!phoneNumber) return;
-
-    const { latitude, longitude } = data;
-    if (typeof latitude !== 'number' || typeof longitude !== 'number') return;
-
-    const locObj = { latitude, longitude };
-    userLocations[phoneNumber] = locObj;
-    await saveLocationToFirebase(phoneNumber, locObj);
-  });
-
-  // =========================
   // GÜVERCİN GÖNDER
   // =========================
   socket.on('send pigeon', async (data) => {
     const { senderPhone, receiverPhone, message } = data;
-
-    // Firebase'den güncel konumları kontrol et
-    if (!userLocations[receiverPhone]) {
-      const firebaseLocations = await loadLocationsFromFirebase();
-      if (firebaseLocations[receiverPhone]) {
-        userLocations[receiverPhone] = firebaseLocations[receiverPhone];
-      }
-    }
-
-    const senderLocation = userLocations[senderPhone];
-    const receiverLocation = userLocations[receiverPhone];
 
     if (pigeonState[senderPhone] === 'busy') {
       return socket.emit('pigeon error', {
@@ -313,23 +225,9 @@ io.on('connection', (socket) => {
       });
     }
 
-    // Mesafe hesaplama
-    let distanceText = "Bilinmiyor";
-    if (senderLocation && receiverLocation) {
-      const dist = calculateDistance(
-        senderLocation.latitude,
-        senderLocation.longitude,
-        receiverLocation.latitude,
-        receiverLocation.longitude
-      );
-      distanceText = dist.toFixed(2);
-    } else if (senderLocation && !receiverLocation) {
-      distanceText = "0.00";
-    }
-
     pigeonState[senderPhone] = 'busy';
 
-    // TÜRKİYE SAAT DİLİMİNE GÖRE DÜZELTİLDİ (Europe/Istanbul)
+    // TÜRKİYE SAAT DİLİMİ (Europe/Istanbul)
     const timestamp = new Date().toLocaleTimeString('tr-TR', {
       timeZone: 'Europe/Istanbul',
       hour: '2-digit',
@@ -342,7 +240,6 @@ io.on('connection', (socket) => {
       senderName: userNames[senderPhone] || senderPhone,
       receiverPhone,
       message,
-      distance: distanceText,
       time: timestamp,
       status: 'teslim edildi'
     };
@@ -353,7 +250,6 @@ io.on('connection', (socket) => {
     // Gönderene ilet
     socket.emit('pigeon status', {
       receiverPhone,
-      distance: newMsg.distance,
       flightTimeInSeconds: 0,
       messageData: newMsg
     });

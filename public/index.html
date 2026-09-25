@@ -689,9 +689,7 @@
       </div>
 
       <div class="login-desc">
-        Güvercinlerin doğru adrese uçabilmesi için
-        telefon numaranızı, şifrenizi ve konumunuzu kullanıyoruz.
-        🇹🇷Muhammed Fatih Uğurlu🇹🇷
+        Giriş yapmak veya kayıt olmak için telefon numaranızı ve şifrenizi girin.
       </div>
 
       <div class="input-group">
@@ -939,12 +937,6 @@
 
   let userNamesMap = {};
 
-  let myLat = null;
-
-  let myLng = null;
-
-  let locationWatchId = null;
-
   let pigeonBusy = false;
 
 
@@ -1002,9 +994,6 @@
     myPhone = phone;
 
 
-    const status =
-      document.getElementById('location-status');
-
     const button =
       document.getElementById('login-button');
 
@@ -1012,90 +1001,17 @@
     button.disabled = true;
 
     button.innerText =
-      '🇹🇷Fatihin Güvercini hazırlanıyor...🇹🇷';
-
-    /* =========================
-       KONUM KONTROLÜ
-    ========================= */
-
-    if (!navigator.geolocation) {
-
-      button.disabled = false;
-
-      button.innerText =
-        'Giriş Yap / Kayıt Ol';
-
-      status.innerText =
-        '❌ Bu tarayıcı konum özelliğini desteklemiyor.';
-
-      return;
-
-    }
+      'Giriş Yapılıyor...';
 
 
-    navigator.geolocation.getCurrentPosition(
+    socket.emit('login', {
 
-      function(position) {
+      phoneNumber: myPhone,
 
-        myLat =
-          position.coords.latitude;
+      password: password
 
-        myLng =
-          position.coords.longitude;
+    });
 
-
-        console.log(
-          '📍 Gerçek konum:',
-          myLat,
-          myLng
-        );
-
-
-        socket.emit('login', {
-
-          phoneNumber: myPhone,
-
-          password: password,
-
-          latitude: myLat,
-
-          longitude: myLng
-
-        });
-
-
-        startLocationTracking();
-
-      },
-
-
-      function(error) {
-
-        console.error(
-          'Konum hatası:',
-          error
-        );
-
-        button.disabled = false;
-        button.innerText = 'Giriş Yap / Kayıt Ol';
-
-        status.innerText =
-          'Konum verilmedi. Konumsuz giriş yapılıyor...';
-
-        socket.emit('login', {
-          phoneNumber: myPhone,
-          password: password,
-          latitude: null,
-          longitude: null
-        });
-
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 0
-      }
-    );
   }
 
 
@@ -1165,82 +1081,6 @@
       document.getElementById('new-password-input').value = '';
     }
   });
-
-
-  /* =========================
-     KONUM TAKİBİ
-  ========================= */
-
-  function startLocationTracking() {
-
-    if (!navigator.geolocation) {
-      return;
-    }
-
-
-    if (locationWatchId !== null) {
-
-      navigator.geolocation.clearWatch(
-        locationWatchId
-      );
-
-    }
-
-
-    locationWatchId =
-      navigator.geolocation.watchPosition(
-
-        function(position) {
-
-          myLat =
-            position.coords.latitude;
-
-          myLng =
-            position.coords.longitude;
-
-
-          console.log(
-            '📍 Konum güncellendi:',
-            myLat,
-            myLng
-          );
-
-
-          socket.emit(
-            'update location',
-            {
-
-              latitude: myLat,
-
-              longitude: myLng
-
-            }
-          );
-
-        },
-
-        function(error) {
-
-          console.log(
-            'Konum takip hatası:',
-            error.message
-          );
-
-        },
-
-        {
-
-          enableHighAccuracy: true,
-
-          maximumAge: 30000,
-
-          timeout: 15000
-
-        }
-
-      );
-
-  }
 
 
   /* =========================
@@ -1726,14 +1566,6 @@
       <div class="msg-info">
 
         <span>
-          📍 ${escapeHtml(
-            String(msg.distance)
-          )} km
-        </span>
-
-        <span>•</span>
-
-        <span>
           ${escapeHtml(
             String(msg.time)
           )}
@@ -1782,20 +1614,6 @@
 
       alert(
         'Güvercinin şu anda yolda! 🕊️'
-      );
-
-      return;
-
-    }
-
-
-    if (
-      myLat === null ||
-      myLng === null
-    ) {
-
-      alert(
-        'Konumunuz henüz alınmadı. Lütfen konum iznini açıp tekrar giriş yapın.'
       );
 
       return;
@@ -1972,8 +1790,7 @@
 
         banner.innerText =
           `🕊️ Güvercin yolda... ` +
-          `Kalan: ${remainingText} ` +
-          `(${data.distance} km)`;
+          `Kalan: ${remainingText}`;
 
 
         timeLeft--;
