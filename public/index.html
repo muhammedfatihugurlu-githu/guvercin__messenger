@@ -2463,13 +2463,15 @@
     }
   }
 
-  // TAMAMEN HAREKETSİZ, SABİT DİK DURAN GÜVERCİN ÇİZİMİ (Tüm titremeler kalktı)
+  // YÜZÜ SAĞA (İLERİYE) BAKAN, TAMAMEN DİK VE SABİT GÜVERCİN ÇİZİMİ
   function drawBird() {
     ctx.save();
+    ctx.translate(Math.round(bird.x), Math.round(bird.y));
+    ctx.scale(-1, 1); // Güvercin emojisini yatay aynalayarak yüzünü gidiş yönüne (sağa) çevirir
     ctx.font = '26px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('🕊️', Math.round(bird.x), Math.round(bird.y));
+    ctx.fillText('🕊️', 0, 0);
     ctx.restore();
   }
 
@@ -2479,15 +2481,15 @@
     drawBird();
   }
 
-  // 120Hz VE MOBİL EKRANLAR İÇİN SABİTLENMİŞ FPS DÖNGÜSÜ
+  // DEĞİŞMEYEN VE TAMAMEN SABİT HIZLA ÇALIŞAN 60 FPS DÖNGÜSÜ
   function gameLoop(timestamp) {
     if (!gameRunning) return;
 
     if (!timestamp) timestamp = performance.now();
     let elapsed = timestamp - lastTime;
 
-    if (elapsed > 12) {
-      lastTime = timestamp - (elapsed % 16.6);
+    if (elapsed >= 15) {
+      lastTime = timestamp - (elapsed % 16.66);
 
       frameCount++;
 
