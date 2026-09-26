@@ -1371,7 +1371,9 @@
 
       userNamesMap = data.userNamesMap || {};
       allMessages = data.history || [];
-      myHighScore = data.highScore || 0;
+      
+      // Rekor sayısını kesin sayıya (integer) dönüştürüyoruz
+      myHighScore = parseInt(data.highScore || 0, 10);
       document.getElementById('menu-highscore').innerText = myHighScore;
       document.getElementById('game-highscore').innerText = myHighScore;
 
@@ -1438,7 +1440,7 @@
   ========================= */
 
   socket.on('score updated', function(data) {
-    myHighScore = data.highScore;
+    myHighScore = parseInt(data.highScore || 0, 10);
     document.getElementById('menu-highscore').innerText = myHighScore;
     document.getElementById('game-highscore').innerText = myHighScore;
   });
@@ -2258,7 +2260,7 @@
 
 
   /* =========================
-     FLAPPY BIRD OYUN MOTORU & YÖNETİMİ
+     FLAPPY BIRD OYUN MOTORU (TAM SABİT HIZ & REKOR DÜZELTME)
   ========================= */
 
   const canvas = document.getElementById('flappy-canvas');
@@ -2267,9 +2269,13 @@
   let gameAnimationId = null;
   let gameRunning = false;
   let gameScore = 0;
-  let lastTime = 0;
 
-  // Fizik Güncellemeleri
+  // Hız ve Zamanlama Değişkenleri
+  let lastTime = 0;
+  let accumulator = 0;
+  const timeStep = 1000 / 60; // Tam 60 FPS (16.66ms)
+
+  // Fizik Ayarları
   let bird = {
     x: 50,
     y: 180,
@@ -2335,6 +2341,7 @@
     pipes = [];
     gameScore = 0;
     frameCount = 0;
+    accumulator = 0;
     document.getElementById('game-score').innerText = '0';
     document.getElementById('game-start-screen').style.display = 'flex';
     document.getElementById('game-start-screen').innerHTML = `
@@ -2352,6 +2359,7 @@
     pipes = [];
     gameScore = 0;
     frameCount = 0;
+    accumulator = 0;
     document.getElementById('game-score').innerText = '0';
 
     stopGameLoop();
@@ -2463,11 +2471,10 @@
     }
   }
 
-  // YÜZÜ SAĞA (İLERİYE) BAKAN, TAMAMEN DİK VE SABİT GÜVERCİN ÇİZİMİ
   function drawBird() {
     ctx.save();
     ctx.translate(Math.round(bird.x), Math.round(bird.y));
-    ctx.scale(-1, 1); // Güvercin emojisini yatay aynalayarak yüzünü gidiş yönüne (sağa) çevirir
+    ctx.scale(-1, 1); // Sağa bakış
     ctx.font = '26px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -2481,87 +2488,117 @@
     drawBird();
   }
 
-  // DEĞİŞMEYEN VE TAMAMEN SABİT HIZLA ÇALIŞAN 60 FPS DÖNGÜSÜ
+  // FİZİK ADIMI HESAPLAYICI (Sadece oyun fiziğini işler)
+  function updatePhysics() {
+    frameCount++;
+
+    bird.velocity += bird.gravity;
+    if (bird.velocity > 6.5) {
+      bird.velocity = 6.5;
+    }
+    bird.y += bird.velocity;
+
+    // Boru Üretimi
+    if (frameCount % 85 === 0) {
+      let minTop = 40;
+      let maxTop = canvas.height - 35 - pipeGap - 40;
+      let topHeight = Math.floor(Math.random() * (maxTop - minTop + 1)) + minTop;
+
+      pipes.push({
+        x: canvas.width,
+        topHeight: topHeight,
+        bottomY: topHeight + pipeGap,
+        passed: false
+      });
+    }
+
+    // Boruların Hareketi
+    for (let i = 0; i < pipes.length; i++) {
+      let p = pipes[i];
+      p.x -= pipeSpeed;
+
+      if (!p.passed && p.x + pipeWidth < bird.x) {
+        p.passed = true;
+        gameScore++;
+        document.getElementById('game-score').innerText = gameScore;
+      }
+
+      // Çarpışma
+      if (
+        bird.x + bird.radius > p.x &&
+        bird.x - bird.radius < p.x + pipeWidth &&
+        (bird.y - bird.radius < p.topHeight || bird.y + bird.radius > p.bottomY)
+      ) {
+        gameOver();
+        return false;
+      }
+    }
+
+    pipes = pipes.filter(p => p.x + pipeWidth > -10);
+
+    // Zemin ve Tavan
+    if (bird.y + bird.radius >= canvas.height - 35 || bird.y - bird.radius <= 0) {
+      gameOver();
+      return false;
+    }
+
+    return true;
+  }
+
+  // SABİT ZAMAN ADIMLI OYUN DÖNGÜSÜ (Hız dalgalanması imkansız hale getirildi)
   function gameLoop(timestamp) {
     if (!gameRunning) return;
 
-    if (!timestamp) timestamp = performance.now();
-    let elapsed = timestamp - lastTime;
+    if (!lastTime) lastTime = timestamp;
+    let deltaTime = timestamp - lastTime;
+    lastTime = timestamp;
 
-    if (elapsed >= 15) {
-      lastTime = timestamp - (elapsed % 16.66);
+    // Mobil arka plana geçişlerde aşırı atlamayı önle
+    if (deltaTime > 100) deltaTime = 100;
 
-      frameCount++;
+    accumulator += deltaTime;
 
-      bird.velocity += bird.gravity;
-      if (bird.velocity > 6.5) {
-        bird.velocity = 6.5;
-      }
-      bird.y += bird.velocity;
-
-      if (frameCount % 85 === 0) {
-        let minTop = 40;
-        let maxTop = canvas.height - 35 - pipeGap - 40;
-        let topHeight = Math.floor(Math.random() * (maxTop - minTop + 1)) + minTop;
-
-        pipes.push({
-          x: canvas.width,
-          topHeight: topHeight,
-          bottomY: topHeight + pipeGap,
-          passed: false
-        });
-      }
-
-      for (let i = 0; i < pipes.length; i++) {
-        let p = pipes[i];
-        p.x -= pipeSpeed;
-
-        if (!p.passed && p.x + pipeWidth < bird.x) {
-          p.passed = true;
-          gameScore++;
-          document.getElementById('game-score').innerText = gameScore;
-        }
-
-        if (
-          bird.x + bird.radius > p.x &&
-          bird.x - bird.radius < p.x + pipeWidth &&
-          (bird.y - bird.radius < p.topHeight || bird.y + bird.radius > p.bottomY)
-        ) {
-          gameOver();
-          return;
-        }
-      }
-
-      pipes = pipes.filter(p => p.x + pipeWidth > -10);
-
-      if (bird.y + bird.radius >= canvas.height - 35 || bird.y - bird.radius <= 0) {
-        gameOver();
-        return;
-      }
-
-      drawBackground();
-      drawPipes();
-      drawGround();
-      drawBird();
+    // Sabit 16.66ms dilimlerinde fiziği çalıştır
+    while (accumulator >= timeStep) {
+      let alive = updatePhysics();
+      if (!alive) return; // Oyun bittiyse döngüyü kır
+      accumulator -= timeStep;
     }
 
-    gameAnimationId = requestAnimationFrame(gameLoop);
+    // Ekranı Çiz
+    drawBackground();
+    drawPipes();
+    drawGround();
+    drawBird();
+
+    if (gameRunning) {
+      gameAnimationId = requestAnimationFrame(gameLoop);
+    }
   }
 
   function gameOver() {
     stopGameLoop();
 
-    if (gameScore > myHighScore) {
-      myHighScore = gameScore;
+    const currentScore = parseInt(gameScore, 10);
+    const numericHighScore = parseInt(myHighScore, 10);
+
+    // Rekor Kontrolü ve Firebase / Sunucu Güncellemesi
+    if (currentScore > numericHighScore) {
+      myHighScore = currentScore;
       document.getElementById('game-highscore').innerText = myHighScore;
       document.getElementById('menu-highscore').innerText = myHighScore;
-      socket.emit('update score', { score: gameScore });
+
+      // Mobilde kopmaları önlemek için hem numara hem skor iletiliyor
+      socket.emit('update score', { 
+        phoneNumber: myPhone, 
+        score: myHighScore 
+      });
     }
 
     document.getElementById('game-start-screen').style.display = 'flex';
     document.getElementById('game-start-screen').innerHTML = `
       <h3>Oyun Bitti!</h3>
-      <p>Skorunuz: <b>${gameScore}</b><br>En Yüksek Rekor: <b>${myHighScore}</b></p>
+      <p>Skorunuz: <b>${currentScore}</b><br>En Yüksek Rekor: <b>${myHighScore}</b></p>
       <button onclick="startGame()">Yeniden Oyna</button>
     `;
   }
