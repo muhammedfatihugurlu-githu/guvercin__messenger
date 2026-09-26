@@ -803,6 +803,8 @@
       height: 400px;
       background: #70c5ce;
       user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
     }
 
     canvas {
@@ -810,6 +812,9 @@
       width: 320px;
       height: 400px;
       cursor: pointer;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
     }
 
     .game-screen-overlay {
@@ -2353,14 +2358,16 @@
     gameLoop();
   }
 
-  function makeJump() {
+  function makeJump(e) {
+    if (e) {
+      e.preventDefault();
+    }
     if (!gameRunning) return;
     bird.velocity = bird.jump;
   }
 
-  canvas.addEventListener('click', function() {
-    if (gameRunning) makeJump();
-  });
+  // MOBİL DOKUNMA VE TIKLAMA HIZLANDIRMA (Titreme ve Gecikmeyi Önler)
+  canvas.addEventListener('pointerdown', makeJump);
 
   window.addEventListener('keydown', function(e) {
     if (e.code === 'Space') {
