@@ -300,20 +300,6 @@
       gap: 6px;
     }
 
-    .profile-password-box input {
-      width: 100%;
-
-      padding: 8px 10px;
-
-      border: 1px solid #00a884;
-
-      border-radius: 6px;
-
-      font-size: 13px;
-
-      outline: none;
-    }
-
     .profile-password-box button {
       background: #008069;
 
@@ -325,11 +311,13 @@
 
       font-weight: bold;
 
-      padding: 8px 12px;
+      padding: 9px 12px;
 
-      font-size: 12px;
+      font-size: 13px;
 
       cursor: pointer;
+
+      width: 100%;
     }
 
     .add-contact-box {
@@ -780,27 +768,11 @@
 
     </div>
 
-    <!-- İSİM YAZMA KISMININ ALTINDAKİ ŞİFRE DEĞİŞTİRME KUTUSU -->
+    <!-- ŞİFRE DEĞİŞTİRME BUTONU -->
     <div class="profile-password-box">
 
-      <input
-        id="old-password-input"
-        type="password"
-        placeholder="Mevcut Şifre"
-        minlength="4"
-        maxlength="12"
-      />
-
-      <input
-        id="new-password-input"
-        type="password"
-        placeholder="Yeni Şifre (4-12 hane)"
-        minlength="4"
-        maxlength="12"
-      />
-
       <button onclick="changePassword()">
-        Şifreyi Değiştir
+        🔒 Şifreyi Değiştir
       </button>
 
     </div>
@@ -1055,32 +1027,32 @@
 
   function changePassword() {
 
-    const oldPassword = document.getElementById('old-password-input').value.trim();
-    const newPassword = document.getElementById('new-password-input').value.trim();
+    const oldPassword = prompt('Lütfen mevcut şifrenizi girin:');
+    if (oldPassword === null) return; // İptal edildi
 
-    if (!oldPassword) {
-      alert('Lütfen mevcut şifrenizi girin!');
+    if (!oldPassword.trim()) {
+      alert('Mevcut şifre boş bırakılamaz!');
       return;
     }
 
-    if (!newPassword || newPassword.length < 4 || newPassword.length > 12) {
+    const newPassword = prompt('Lütfen yeni şifrenizi girin (4-12 karakter):');
+    if (newPassword === null) return; // İptal edildi
+
+    const trimmedNew = newPassword.trim();
+    if (trimmedNew.length < 4 || trimmedNew.length > 12) {
       alert('Yeni şifreniz en az 4, en fazla 12 karakter olmalıdır!');
       return;
     }
 
     socket.emit('change password', {
-      oldPassword: oldPassword,
-      newPassword: newPassword
+      oldPassword: oldPassword.trim(),
+      newPassword: trimmedNew
     });
 
   }
 
   socket.on('password result', function(data) {
     alert(data.message);
-    if (data.success) {
-      document.getElementById('old-password-input').value = '';
-      document.getElementById('new-password-input').value = '';
-    }
   });
 
 
@@ -1571,8 +1543,6 @@
             String(msg.time)
           )}
         </span>
-
-        
 
       </div>
 
