@@ -2267,8 +2267,9 @@
   let gameAnimationId = null;
   let gameRunning = false;
   let gameScore = 0;
+  let lastTime = 0;
 
-  // Fizik Güncellemeleri (Daha yumuşak ve kontrollü)
+  // Fizik Güncellemeleri
   let bird = {
     x: 50,
     y: 180,
@@ -2355,19 +2356,21 @@
 
     stopGameLoop();
     gameRunning = true;
-    gameLoop();
+    lastTime = performance.now();
+    gameLoop(lastTime);
   }
 
   function makeJump(e) {
     if (e) {
       e.preventDefault();
+      e.stopPropagation();
     }
     if (!gameRunning) return;
     bird.velocity = bird.jump;
   }
 
-  // MOBİL DOKUNMA VE TIKLAMA HIZLANDIRMA (Titreme ve Gecikmeyi Önler)
-  canvas.addEventListener('pointerdown', makeJump);
+  // MOBİL DOKUNMA VE TIKLAMA OLAYLARI (Çift Tıklamayı & Titremeyi Engeller)
+  canvas.addEventListener('pointerdown', makeJump, { passive: false });
 
   window.addEventListener('keydown', function(e) {
     if (e.code === 'Space') {
@@ -2383,7 +2386,6 @@
   /* GÖRSEL ÇİZİM FONKSİYONLARI */
 
   function drawBackground() {
-    // Yumuşak Gökyüzü Geçişi (Gradient)
     let skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
     skyGrad.addColorStop(0, '#4ec0ca');
     skyGrad.addColorStop(0.7, '#a0e8ef');
@@ -2391,7 +2393,6 @@
     ctx.fillStyle = skyGrad;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Hareket Eden Beyaz Bulutlar
     ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
     for (let c of clouds) {
       if (gameRunning) {
@@ -2404,9 +2405,9 @@
 
   function drawCloud(x, y, scale) {
     ctx.beginPath();
-    ctx.arc(x, y, 16 * scale, 0, Math.PI * 2);
-    ctx.arc(x + 12 * scale, y - 10 * scale, 14 * scale, 0, Math.PI * 2);
-    ctx.arc(x + 24 * scale, y, 16 * scale, 0, Math.PI * 2);
+    ctx.arc(Math.round(x), Math.round(y), Math.round(16 * scale), 0, Math.PI * 2);
+    ctx.arc(Math.round(x + 12 * scale), Math.round(y - 10 * scale), Math.round(14 * scale), 0, Math.PI * 2);
+    ctx.arc(Math.round(x + 24 * scale), Math.round(y), Math.round(16 * scale), 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -2414,20 +2415,17 @@
     let groundHeight = 35;
     let groundY = canvas.height - groundHeight;
 
-    // Toprak Alanı
     ctx.fillStyle = '#ded895';
     ctx.fillRect(0, groundY, canvas.width, groundHeight);
 
-    // Çim Şeridi
     ctx.fillStyle = '#73bf2e';
     ctx.fillRect(0, groundY, canvas.width, 8);
     ctx.fillStyle = '#53a018';
     ctx.fillRect(0, groundY + 8, canvas.width, 2);
 
-    // Çizgi Desenleri
     ctx.strokeStyle = '#cbb86b';
     ctx.lineWidth = 2;
-    let offset = (frameCount * pipeSpeed) % 16;
+    let offset = Math.round((frameCount * pipeSpeed) % 16);
     for (let x = -16; x < canvas.width + 16; x += 16) {
       ctx.beginPath();
       ctx.moveTo(x - offset, groundY + 10);
@@ -2438,42 +2436,43 @@
 
   function drawPipes() {
     for (let p of pipes) {
-      // Üst Boru Gövdesi
-      let topGrad = ctx.createLinearGradient(p.x, 0, p.x + pipeWidth, 0);
+      let px = Math.round(p.x);
+      let pTop = Math.round(p.topHeight);
+      let pBottom = Math.round(p.bottomY);
+
+      let topGrad = ctx.createLinearGradient(px, 0, px + pipeWidth, 0);
       topGrad.addColorStop(0, '#73bf2e');
       topGrad.addColorStop(0.5, '#99e344');
       topGrad.addColorStop(1, '#53a018');
 
       ctx.fillStyle = topGrad;
-      ctx.fillRect(p.x, 0, pipeWidth, p.topHeight);
+      ctx.fillRect(px, 0, pipeWidth, pTop);
       ctx.strokeStyle = '#2e6307';
       ctx.lineWidth = 2;
-      ctx.strokeRect(p.x, 0, pipeWidth, p.topHeight);
+      ctx.strokeRect(px, 0, pipeWidth, pTop);
 
-      // Üst Boru Kapağı
-      ctx.fillRect(p.x - 3, p.topHeight - 18, pipeWidth + 6, 18);
-      ctx.strokeRect(p.x - 3, p.topHeight - 18, pipeWidth + 6, 18);
+      ctx.fillRect(px - 3, pTop - 18, pipeWidth + 6, 18);
+      ctx.strokeRect(px - 3, pTop - 18, pipeWidth + 6, 18);
 
-      // Alt Boru Gövdesi
-      let bottomHeight = canvas.height - 35 - p.bottomY;
-      ctx.fillRect(p.x, p.bottomY, pipeWidth, bottomHeight);
-      ctx.strokeRect(p.x, p.bottomY, pipeWidth, bottomHeight);
+      let bottomHeight = canvas.height - 35 - pBottom;
+      ctx.fillRect(px, pBottom, pipeWidth, bottomHeight);
+      ctx.strokeRect(px, pBottom, pipeWidth, bottomHeight);
 
-      // Alt Boru Kapağı
-      ctx.fillRect(p.x - 3, p.bottomY, pipeWidth + 6, 18);
-      ctx.strokeRect(p.x - 3, p.bottomY, pipeWidth + 6, 18);
+      ctx.fillRect(px - 3, pBottom, pipeWidth + 6, 18);
+      ctx.strokeRect(px - 3, pBottom, pipeWidth + 6, 18);
     }
   }
 
+  // TİTREMEYİ ENGELLEYEN TAM SAYI PİKSEL HİZALAMALI GÜVERCİN ÇİZİMİ
   function drawBird() {
     ctx.save();
-    ctx.translate(bird.x, bird.y);
+    
+    // Math.round ile küsuratları yuvarlayarak mobil ekrandaki font titremesini bitiriyoruz
+    ctx.translate(Math.round(bird.x), Math.round(bird.y));
 
-    // Düzeltilmiş Açı ve Yön (Sağa Bakış & Doğru Eğilme)
     let angle = Math.min(Math.PI / 4, Math.max(-Math.PI / 4, bird.velocity * 0.08));
     ctx.rotate(angle);
 
-    // Emojinin yüzünü sağa (gidiş yönüne) çevirmek için yatayda aynala
     ctx.scale(-1, 1);
 
     ctx.font = '26px sans-serif';
@@ -2490,69 +2489,70 @@
     drawBird();
   }
 
-  function gameLoop() {
+  // 120Hz VE MOBİL EKRANLAR İÇİN SABİTLENMİŞ FPS DÖNGÜSÜ
+  function gameLoop(timestamp) {
     if (!gameRunning) return;
 
-    frameCount++;
+    if (!timestamp) timestamp = performance.now();
+    let elapsed = timestamp - lastTime;
 
-    // Fizik Güncellemesi (Yumuşak Düşüş ve Hız Sınırı)
-    bird.velocity += bird.gravity;
-    if (bird.velocity > 6.5) {
-      bird.velocity = 6.5;
-    }
-    bird.y += bird.velocity;
+    // Her karede maksimum 16.6ms (60 FPS) hesabı yaparak telefonlarda takılmayı/hızlanmayı önler
+    if (elapsed > 12) {
+      lastTime = timestamp - (elapsed % 16.6);
 
-    // Yeni Boru Oluşturma
-    if (frameCount % 85 === 0) {
-      let minTop = 40;
-      let maxTop = canvas.height - 35 - pipeGap - 40;
-      let topHeight = Math.floor(Math.random() * (maxTop - minTop + 1)) + minTop;
+      frameCount++;
 
-      pipes.push({
-        x: canvas.width,
-        topHeight: topHeight,
-        bottomY: topHeight + pipeGap,
-        passed: false
-      });
-    }
+      bird.velocity += bird.gravity;
+      if (bird.velocity > 6.5) {
+        bird.velocity = 6.5;
+      }
+      bird.y += bird.velocity;
 
-    // Boruları Hareket Ettir
-    for (let i = 0; i < pipes.length; i++) {
-      let p = pipes[i];
-      p.x -= pipeSpeed;
+      if (frameCount % 85 === 0) {
+        let minTop = 40;
+        let maxTop = canvas.height - 35 - pipeGap - 40;
+        let topHeight = Math.floor(Math.random() * (maxTop - minTop + 1)) + minTop;
 
-      // Skor Artırımı
-      if (!p.passed && p.x + pipeWidth < bird.x) {
-        p.passed = true;
-        gameScore++;
-        document.getElementById('game-score').innerText = gameScore;
+        pipes.push({
+          x: canvas.width,
+          topHeight: topHeight,
+          bottomY: topHeight + pipeGap,
+          passed: false
+        });
       }
 
-      // Çarpışma Kontrolü (Boru Hitbox)
-      if (
-        bird.x + bird.radius > p.x &&
-        bird.x - bird.radius < p.x + pipeWidth &&
-        (bird.y - bird.radius < p.topHeight || bird.y + bird.radius > p.bottomY)
-      ) {
+      for (let i = 0; i < pipes.length; i++) {
+        let p = pipes[i];
+        p.x -= pipeSpeed;
+
+        if (!p.passed && p.x + pipeWidth < bird.x) {
+          p.passed = true;
+          gameScore++;
+          document.getElementById('game-score').innerText = gameScore;
+        }
+
+        if (
+          bird.x + bird.radius > p.x &&
+          bird.x - bird.radius < p.x + pipeWidth &&
+          (bird.y - bird.radius < p.topHeight || bird.y + bird.radius > p.bottomY)
+        ) {
+          gameOver();
+          return;
+        }
+      }
+
+      pipes = pipes.filter(p => p.x + pipeWidth > -10);
+
+      if (bird.y + bird.radius >= canvas.height - 35 || bird.y - bird.radius <= 0) {
         gameOver();
         return;
       }
+
+      drawBackground();
+      drawPipes();
+      drawGround();
+      drawBird();
     }
-
-    // Ekran Dışına Çıkan Boruları Sil
-    pipes = pipes.filter(p => p.x + pipeWidth > -10);
-
-    // Zemin ve Tavan Çarpışması
-    if (bird.y + bird.radius >= canvas.height - 35 || bird.y - bird.radius <= 0) {
-      gameOver();
-      return;
-    }
-
-    // Çizim
-    drawBackground();
-    drawPipes();
-    drawGround();
-    drawBird();
 
     gameAnimationId = requestAnimationFrame(gameLoop);
   }
@@ -2560,7 +2560,6 @@
   function gameOver() {
     stopGameLoop();
 
-    // Rekor Kontrolü
     if (gameScore > myHighScore) {
       myHighScore = gameScore;
       document.getElementById('game-highscore').innerText = myHighScore;
