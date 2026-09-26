@@ -2287,7 +2287,7 @@
 
   let pipes = [];
   let pipeWidth = 52;
-  let pipeGap = 120;
+  let pipeGap = 150;
   let pipeSpeed = 2.2;
   let frameCount = 0;
 
@@ -2499,7 +2499,7 @@
     bird.y += bird.velocity;
 
     // Boru Üretimi
-    if (frameCount % 85 === 0) {
+    if (frameCount % 100 === 0) {
       let minTop = 40;
       let maxTop = canvas.height - 35 - pipeGap - 40;
       let topHeight = Math.floor(Math.random() * (maxTop - minTop + 1)) + minTop;
