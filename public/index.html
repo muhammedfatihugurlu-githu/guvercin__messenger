@@ -637,7 +637,7 @@
     }
 
     /* =========================
-       FLAPPY BIRD OYUN MODALI
+       OYUN MODALI & MENÜSÜ
     ========================= */
 
     .game-modal {
@@ -663,7 +663,6 @@
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
       display: flex;
       flex-direction: column;
-      align-items: center;
     }
 
     .game-header {
@@ -684,15 +683,118 @@
       line-height: 1;
     }
 
+    /* OYUNLAR MENÜSÜ EKRANI */
+    .game-menu-screen {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: #f0f2f5;
+    }
+
+    .game-menu-title {
+      font-size: 13px;
+      font-weight: bold;
+      color: #667781;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .game-selection-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .game-item-card {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: transform 0.1s ease;
+    }
+
+    .game-item-card:hover {
+      border-color: #00a884;
+    }
+
+    .game-item-icon {
+      width: 48px;
+      height: 48px;
+      background: #e8f5e9;
+      border-radius: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 26px;
+      flex-shrink: 0;
+    }
+
+    .game-item-info {
+      flex: 1;
+    }
+
+    .game-item-name {
+      font-size: 14px;
+      font-weight: bold;
+      color: #111b21;
+    }
+
+    .game-item-desc {
+      font-size: 11px;
+      color: #667781;
+      margin-top: 2px;
+    }
+
+    .game-item-score {
+      font-size: 11px;
+      color: #008069;
+      font-weight: bold;
+      margin-top: 4px;
+    }
+
+    .btn-play-game {
+      background: #00a884;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    /* FLAPPY BIRD EKRANI */
+    .game-play-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
     .game-score-bar {
       width: 100%;
       background: #f0f2f5;
-      padding: 8px 16px;
+      padding: 8px 12px;
       display: flex;
       justify-content: space-between;
+      align-items: center;
       font-size: 13px;
       color: #111b21;
       border-bottom: 1px solid #e0e0e0;
+    }
+
+    .btn-back-menu {
+      background: #e0e0e0;
+      color: #333;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
     }
 
     .canvas-container {
@@ -892,7 +994,7 @@
       </button>
 
       <button class="btn-action-side btn-game-side" onclick="openGameModal()">
-        🎮 Oyun Oyna (Flappy Bird)
+        🎮 Oyun Oyna
       </button>
 
     </div>
@@ -1004,29 +1106,50 @@
 
 
 <!-- =========================
-     FLAPPY BIRD OYUN MODALI
+     OYUN SALONU MODALI
 ========================= -->
 
 <div id="game-modal" class="game-modal" style="display: none;">
   <div class="game-card">
 
     <div class="game-header">
-      <span>🕊️ Güvercin Uçur</span>
+      <span id="game-header-title">🎮 Oyun Salonu</span>
       <span class="close-game" onclick="closeGameModal()">✕</span>
     </div>
 
-    <div class="game-score-bar">
-      <span>Skor: <b id="game-score">0</b></span>
-      <span>En Yüksek Rekor: <b id="game-highscore">0</b></span>
+    <!-- 1. EKRAN: OYUN SEÇİM MENÜSÜ -->
+    <div id="game-menu-screen" class="game-menu-screen">
+      <div class="game-menu-title">Oynanabilir Oyunlar</div>
+
+      <div class="game-selection-list">
+        <div class="game-item-card">
+          <div class="game-item-icon">🕊️</div>
+          <div class="game-item-info">
+            <div class="game-item-name">Güvercin Uçur (Flappy Bird)</div>
+            <div class="game-item-desc">Engellere takılmadan en yüksek skoru yap!</div>
+            <div class="game-item-score">En Yüksek Rekor: <span id="menu-highscore">0</span></div>
+          </div>
+          <button class="btn-play-game" onclick="selectGame('flappy')">Oyna</button>
+        </div>
+      </div>
     </div>
 
-    <div class="canvas-container">
-      <canvas id="flappy-canvas" width="320" height="400"></canvas>
+    <!-- 2. EKRAN: FLAPPY BIRD OYUN ALANI -->
+    <div id="game-play-screen" class="game-play-screen" style="display: none;">
+      <div class="game-score-bar">
+        <button class="btn-back-menu" onclick="showGameMenu()">◀ Menü</button>
+        <span>Skor: <b id="game-score">0</b></span>
+        <span>Rekor: <b id="game-highscore">0</b></span>
+      </div>
 
-      <div id="game-start-screen" class="game-screen-overlay">
-        <h3>Güvercin Uçur</h3>
-        <p>Ekrana Tıkla veya Boşluk (Space) Tuşuna Basarak Güvercini Havada Tut!</p>
-        <button onclick="startGame()">Oyuna Başla</button>
+      <div class="canvas-container">
+        <canvas id="flappy-canvas" width="320" height="400"></canvas>
+
+        <div id="game-start-screen" class="game-screen-overlay">
+          <h3>🕊️ Güvercin Uçur</h3>
+          <p>Ekrana Tıkla veya Boşluk (Space) Tuşuna Basarak Güvercini Havada Tut!</p>
+          <button onclick="startGame()">Başla</button>
+        </div>
       </div>
     </div>
 
@@ -1244,6 +1367,7 @@
       userNamesMap = data.userNamesMap || {};
       allMessages = data.history || [];
       myHighScore = data.highScore || 0;
+      document.getElementById('menu-highscore').innerText = myHighScore;
       document.getElementById('game-highscore').innerText = myHighScore;
 
 
@@ -1310,6 +1434,7 @@
 
   socket.on('score updated', function(data) {
     myHighScore = data.highScore;
+    document.getElementById('menu-highscore').innerText = myHighScore;
     document.getElementById('game-highscore').innerText = myHighScore;
   });
 
@@ -2128,7 +2253,7 @@
 
 
   /* =========================
-     FLAPPY BIRD OYUN MOTORU
+     FLAPPY BIRD OYUN MOTORU & YÖNETİMİ
   ========================= */
 
   const canvas = document.getElementById('flappy-canvas');
@@ -2144,30 +2269,60 @@
     velocity: 0,
     gravity: 0.38,
     jump: -6.5,
-    size: 20
+    radius: 12
   };
 
   let pipes = [];
-  let pipeWidth = 48;
+  let pipeWidth = 52;
   let pipeGap = 120;
-  let pipeSpeed = 2;
+  let pipeSpeed = 2.2;
   let frameCount = 0;
+
+  // Arka Plan Bulutları
+  let clouds = [
+    { x: 30, y: 50, scale: 0.8 },
+    { x: 180, y: 80, scale: 1.1 },
+    { x: 270, y: 35, scale: 0.7 }
+  ];
 
   function openGameModal() {
     document.getElementById('game-modal').style.display = 'flex';
-    document.getElementById('game-highscore').innerText = myHighScore;
-    resetGame();
+    showGameMenu();
   }
 
   function closeGameModal() {
     document.getElementById('game-modal').style.display = 'none';
+    stopGameLoop();
+  }
+
+  function showGameMenu() {
+    stopGameLoop();
+    document.getElementById('game-header-title').innerText = '🎮 Oyun Salonu';
+    document.getElementById('game-menu-screen').style.display = 'flex';
+    document.getElementById('game-play-screen').style.display = 'none';
+    document.getElementById('menu-highscore').innerText = myHighScore;
+  }
+
+  function selectGame(gameType) {
+    if (gameType === 'flappy') {
+      document.getElementById('game-header-title').innerText = '🕊️ Güvercin Uçur';
+      document.getElementById('game-menu-screen').style.display = 'none';
+      document.getElementById('game-play-screen').style.display = 'flex';
+      document.getElementById('game-highscore').innerText = myHighScore;
+      resetGame();
+    }
+  }
+
+  function stopGameLoop() {
     gameRunning = false;
     if (gameAnimationId) {
       cancelAnimationFrame(gameAnimationId);
+      gameAnimationId = null;
     }
   }
 
   function resetGame() {
+    stopGameLoop();
     bird.y = 180;
     bird.velocity = 0;
     pipes = [];
@@ -2176,9 +2331,9 @@
     document.getElementById('game-score').innerText = '0';
     document.getElementById('game-start-screen').style.display = 'flex';
     document.getElementById('game-start-screen').innerHTML = `
-      <h3>Güvercin Uçur</h3>
+      <h3>🕊️ Güvercin Uçur</h3>
       <p>Ekrana Tıkla veya Boşluk (Space) Tuşuna Basarak Güvercini Havada Tut!</p>
-      <button onclick="startGame()">Oyuna Başla</button>
+      <button onclick="startGame()">Başla</button>
     `;
     drawStaticScene();
   }
@@ -2193,10 +2348,8 @@
     document.getElementById('game-score').innerText = '0';
     gameRunning = true;
 
-    if (gameAnimationId) {
-      cancelAnimationFrame(gameAnimationId);
-    }
-
+    stopGameLoop();
+    gameRunning = true;
     gameLoop();
   }
 
@@ -2205,35 +2358,126 @@
     bird.velocity = bird.jump;
   }
 
-  canvas.addEventListener('click', function(e) {
-    if (gameRunning) {
-      makeJump();
-    }
+  canvas.addEventListener('click', function() {
+    if (gameRunning) makeJump();
   });
 
   window.addEventListener('keydown', function(e) {
     if (e.code === 'Space') {
       const modal = document.getElementById('game-modal');
-      if (modal.style.display !== 'none' && gameRunning) {
+      const isPlayScreen = document.getElementById('game-play-screen').style.display !== 'none';
+      if (modal.style.display !== 'none' && isPlayScreen && gameRunning) {
         e.preventDefault();
         makeJump();
       }
     }
   });
 
-  function drawStaticScene() {
-    ctx.fillStyle = '#70c5ce';
+  /* GÖRSEL ÇİZİM FONKSİYONLARI */
+
+  function drawBackground() {
+    // Yumuşak Gökyüzü Geçişi (Gradient)
+    let skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    skyGrad.addColorStop(0, '#4ec0ca');
+    skyGrad.addColorStop(0.7, '#a0e8ef');
+    skyGrad.addColorStop(1, '#ded895');
+    ctx.fillStyle = skyGrad;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Zemin
-    ctx.fillStyle = '#ded895';
-    ctx.fillRect(0, canvas.height - 30, canvas.width, 30);
-    ctx.fillStyle = '#008069';
-    ctx.fillRect(0, canvas.height - 30, canvas.width, 4);
+    // Hareket Eden Beyaz Bulutlar
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+    for (let c of clouds) {
+      if (gameRunning) {
+        c.x -= 0.4;
+        if (c.x < -60) c.x = canvas.width + 40;
+      }
+      drawCloud(c.x, c.y, c.scale);
+    }
+  }
 
-    // Güvercin
-    ctx.font = '24px sans-serif';
-    ctx.fillText('🕊️', bird.x - 12, bird.y + 8);
+  function drawCloud(x, y, scale) {
+    ctx.beginPath();
+    ctx.arc(x, y, 16 * scale, 0, Math.PI * 2);
+    ctx.arc(x + 12 * scale, y - 10 * scale, 14 * scale, 0, Math.PI * 2);
+    ctx.arc(x + 24 * scale, y, 16 * scale, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function drawGround() {
+    let groundHeight = 35;
+    let groundY = canvas.height - groundHeight;
+
+    // Toprak Alanı
+    ctx.fillStyle = '#ded895';
+    ctx.fillRect(0, groundY, canvas.width, groundHeight);
+
+    // Çim Şeridi
+    ctx.fillStyle = '#73bf2e';
+    ctx.fillRect(0, groundY, canvas.width, 8);
+    ctx.fillStyle = '#53a018';
+    ctx.fillRect(0, groundY + 8, canvas.width, 2);
+
+    // Çizgi Desenleri
+    ctx.strokeStyle = '#cbb86b';
+    ctx.lineWidth = 2;
+    let offset = (frameCount * pipeSpeed) % 16;
+    for (let x = -16; x < canvas.width + 16; x += 16) {
+      ctx.beginPath();
+      ctx.moveTo(x - offset, groundY + 10);
+      ctx.lineTo(x - offset - 6, canvas.height);
+      ctx.stroke();
+    }
+  }
+
+  function drawPipes() {
+    for (let p of pipes) {
+      // Üst Boru Gövdesi
+      let topGrad = ctx.createLinearGradient(p.x, 0, p.x + pipeWidth, 0);
+      topGrad.addColorStop(0, '#73bf2e');
+      topGrad.addColorStop(0.5, '#99e344');
+      topGrad.addColorStop(1, '#53a018');
+
+      ctx.fillStyle = topGrad;
+      ctx.fillRect(p.x, 0, pipeWidth, p.topHeight);
+      ctx.strokeStyle = '#2e6307';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(p.x, 0, pipeWidth, p.topHeight);
+
+      // Üst Boru Kapağı
+      ctx.fillRect(p.x - 3, p.topHeight - 18, pipeWidth + 6, 18);
+      ctx.strokeRect(p.x - 3, p.topHeight - 18, pipeWidth + 6, 18);
+
+      // Alt Boru Gövdesi
+      let bottomHeight = canvas.height - 35 - p.bottomY;
+      ctx.fillRect(p.x, p.bottomY, pipeWidth, bottomHeight);
+      ctx.strokeRect(p.x, p.bottomY, pipeWidth, bottomHeight);
+
+      // Alt Boru Kapağı
+      ctx.fillRect(p.x - 3, p.bottomY, pipeWidth + 6, 18);
+      ctx.strokeRect(p.x - 3, p.bottomY, pipeWidth + 6, 18);
+    }
+  }
+
+  function drawBird() {
+    ctx.save();
+    ctx.translate(bird.x, bird.y);
+
+    // Hıza Göre Güvercin Eğimi (Açı)
+    let angle = Math.min(Math.PI / 4, Math.max(-Math.PI / 4, bird.velocity * 0.08));
+    ctx.rotate(angle);
+
+    ctx.font = '26px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🕊️', 0, 0);
+
+    ctx.restore();
+  }
+
+  function drawStaticScene() {
+    drawBackground();
+    drawGround();
+    drawBird();
   }
 
   function gameLoop() {
@@ -2241,14 +2485,14 @@
 
     frameCount++;
 
-    // Fizik
+    // Fizik Güncellemesi
     bird.velocity += bird.gravity;
     bird.y += bird.velocity;
 
-    // Boru Üretimi
-    if (frameCount % 90 === 0) {
+    // Yeni Boru Oluşturma
+    if (frameCount % 85 === 0) {
       let minTop = 40;
-      let maxTop = canvas.height - 30 - pipeGap - 40;
+      let maxTop = canvas.height - 35 - pipeGap - 40;
       let topHeight = Math.floor(Math.random() * (maxTop - minTop + 1)) + minTop;
 
       pipes.push({
@@ -2259,27 +2503,10 @@
       });
     }
 
-    // Çizim Başlangıcı
-    ctx.fillStyle = '#70c5ce';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Boruları Çiz ve Taşı
+    // Boruları Hareket Ettir
     for (let i = 0; i < pipes.length; i++) {
       let p = pipes[i];
       p.x -= pipeSpeed;
-
-      // Üst Boru
-      ctx.fillStyle = '#00a884';
-      ctx.fillRect(p.x, 0, pipeWidth, p.topHeight);
-      ctx.strokeStyle = '#005c4b';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(p.x, 0, pipeWidth, p.topHeight);
-
-      // Alt Boru
-      let bottomHeight = canvas.height - 30 - p.bottomY;
-      ctx.fillStyle = '#00a884';
-      ctx.fillRect(p.x, p.bottomY, pipeWidth, bottomHeight);
-      ctx.strokeRect(p.x, p.bottomY, pipeWidth, bottomHeight);
 
       // Skor Artırımı
       if (!p.passed && p.x + pipeWidth < bird.x) {
@@ -2288,46 +2515,43 @@
         document.getElementById('game-score').innerText = gameScore;
       }
 
-      // Çarpışma Kontrolü
+      // Çarpışma Kontrolü (Boru Hitbox)
       if (
-        bird.x + 10 > p.x &&
-        bird.x - 10 < p.x + pipeWidth &&
-        (bird.y - 10 < p.topHeight || bird.y + 10 > p.bottomY)
+        bird.x + bird.radius > p.x &&
+        bird.x - bird.radius < p.x + pipeWidth &&
+        (bird.y - bird.radius < p.topHeight || bird.y + bird.radius > p.bottomY)
       ) {
         gameOver();
         return;
       }
     }
 
-    // Boruları Temizle
-    pipes = pipes.filter(p => p.x + pipeWidth > 0);
+    // Ekran Dışına Çıkan Boruları Sil
+    pipes = pipes.filter(p => p.x + pipeWidth > -10);
 
-    // Zemin
-    ctx.fillStyle = '#ded895';
-    ctx.fillRect(0, canvas.height - 30, canvas.width, 30);
-    ctx.fillStyle = '#008069';
-    ctx.fillRect(0, canvas.height - 30, canvas.width, 4);
-
-    // Zemin veya Tavan Çarpışması
-    if (bird.y + 10 >= canvas.height - 30 || bird.y - 10 <= 0) {
+    // Zemin ve Tavan Çarpışması
+    if (bird.y + bird.radius >= canvas.height - 35 || bird.y - bird.radius <= 0) {
       gameOver();
       return;
     }
 
-    // Güvercini Çiz
-    ctx.font = '24px sans-serif';
-    ctx.fillText('🕊️', bird.x - 12, bird.y + 8);
+    // Çizim
+    drawBackground();
+    drawPipes();
+    drawGround();
+    drawBird();
 
     gameAnimationId = requestAnimationFrame(gameLoop);
   }
 
   function gameOver() {
-    gameRunning = false;
+    stopGameLoop();
 
     // Rekor Kontrolü
     if (gameScore > myHighScore) {
       myHighScore = gameScore;
       document.getElementById('game-highscore').innerText = myHighScore;
+      document.getElementById('menu-highscore').innerText = myHighScore;
       socket.emit('update score', { score: gameScore });
     }
 
