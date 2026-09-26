@@ -2263,12 +2263,13 @@
   let gameRunning = false;
   let gameScore = 0;
 
+  // Fizik Güncellemeleri (Daha yumuşak ve kontrollü)
   let bird = {
     x: 50,
     y: 180,
     velocity: 0,
-    gravity: 0.38,
-    jump: -6.5,
+    gravity: 0.24,
+    jump: -5.5,
     radius: 12
   };
 
@@ -2346,7 +2347,6 @@
     gameScore = 0;
     frameCount = 0;
     document.getElementById('game-score').innerText = '0';
-    gameRunning = true;
 
     stopGameLoop();
     gameRunning = true;
@@ -2462,9 +2462,12 @@
     ctx.save();
     ctx.translate(bird.x, bird.y);
 
-    // Hıza Göre Güvercin Eğimi (Açı)
+    // Düzeltilmiş Açı ve Yön (Sağa Bakış & Doğru Eğilme)
     let angle = Math.min(Math.PI / 4, Math.max(-Math.PI / 4, bird.velocity * 0.08));
     ctx.rotate(angle);
+
+    // Emojinin yüzünü sağa (gidiş yönüne) çevirmek için yatayda aynala
+    ctx.scale(-1, 1);
 
     ctx.font = '26px sans-serif';
     ctx.textAlign = 'center';
@@ -2485,8 +2488,11 @@
 
     frameCount++;
 
-    // Fizik Güncellemesi
+    // Fizik Güncellemesi (Yumuşak Düşüş ve Hız Sınırı)
     bird.velocity += bird.gravity;
+    if (bird.velocity > 6.5) {
+      bird.velocity = 6.5;
+    }
     bird.y += bird.velocity;
 
     // Yeni Boru Oluşturma
