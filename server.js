@@ -12,6 +12,7 @@ app.use(express.static('public'));
 const FIREBASE_MESSAGES_URL = "https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/messages.json";
 const FIREBASE_USERS_URL = "https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/users.json";
 const FIREBASE_PASSWORDS_URL = "https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/passwords.json";
+const FIREBASE_HIGHSCORES_URL = "https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/highscores.json";
 
 // Firebase'den tüm mesajları okuma
 async function loadMessages() {
@@ -94,6 +95,33 @@ async function savePasswordToFirebase(phone, password) {
   }
 }
 
+// Firebase'den rekorları okuma
+async function loadHighScoresFromFirebase() {
+  try {
+    const response = await fetch(FIREBASE_HIGHSCORES_URL);
+    if (!response.ok) return {};
+    const data = await response.json();
+    return data || {};
+  } catch (err) {
+    console.error('Firebase rekor okuma hatası:', err);
+    return {};
+  }
+}
+
+// Firebase'e rekor kaydetme
+async function saveHighScoreToFirebase(phone, score) {
+  try {
+    const scoreUrl = `https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/highscores/${phone}.json`;
+    await fetch(scoreUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(score)
+    });
+  } catch (err) {
+    console.error('Firebase rekor kaydetme hatası:', err);
+  }
+}
+
 const userNames = {};
 const userPasswords = {};
 const pigeonState = {};
@@ -135,10 +163,14 @@ io.on('connection', (socket) => {
     // Kullanıcıyı kendi telefon numarasına özel odaya dahil et
     socket.join(phoneNumber);
 
-    // Firebase isim verilerini çek
-    const firebaseNames = await loadUserNamesFromFirebase();
+    // Firebase verilerini çek
+    const [firebaseNames, firebaseScores] = await Promise.all([
+      loadUserNamesFromFirebase(),
+      loadHighScoresFromFirebase()
+    ]);
 
     userNames[phoneNumber] = firebaseNames[phoneNumber] || userNames[phoneNumber] || phoneNumber;
+    const userHighScore = firebaseScores[phoneNumber] || 0;
 
     if (!pigeonState[phoneNumber]) {
       pigeonState[phoneNumber] = 'home';
@@ -154,7 +186,8 @@ io.on('connection', (socket) => {
       name: userNames[phoneNumber],
       userNamesMap: { ...firebaseNames, ...userNames },
       history: userHistory,
-      pigeonState: pigeonState[phoneNumber]
+      pigeonState: pigeonState[phoneNumber],
+      highScore: userHighScore
     });
 
     console.log(`📍 ${phoneNumber} (${userNames[phoneNumber]}) başarıyla giriş yaptı.`);
@@ -211,6 +244,29 @@ io.on('connection', (socket) => {
       success: true,
       message: 'Şifreniz başarıyla değiştirildi! 🕊️'
     });
+  });
+
+  // =========================
+  // REKOR GÜNCELLEME (FLAPPY BIRD)
+  // =========================
+  socket.on('update score', async (data) => {
+    const phoneNumber = socket.phoneNumber;
+    if (!phoneNumber) return;
+
+    const newScore = parseInt(data.score, 10);
+    if (isNaN(newScore) || newScore <= 0) return;
+
+    const highScores = await loadHighScoresFromFirebase();
+    const currentHighScore = highScores[phoneNumber] || 0;
+
+    if (newScore > currentHighScore) {
+      await saveHighScoreToFirebase(phoneNumber, newScore);
+      socket.emit('score updated', {
+        highScore: newScore,
+        message: 'Yeni rekor kırıldı! 🏆'
+      });
+      console.log(`🏆 ${phoneNumber} yeni rekor kırdı: ${newScore}`);
+    }
   });
 
   // =========================

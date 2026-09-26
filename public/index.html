@@ -285,7 +285,7 @@
       cursor: pointer;
     }
 
-    /* ŞİFRE DEĞİŞTİRME KUTUSU */
+    /* ŞİFRE DEĞİŞTİRME VE OYUN KUTUSU */
     .profile-password-box {
       padding: 10px;
 
@@ -300,7 +300,7 @@
       gap: 6px;
     }
 
-    .profile-password-box button {
+    .btn-action-side {
       background: #008069;
 
       color: white;
@@ -318,6 +318,10 @@
       cursor: pointer;
 
       width: 100%;
+    }
+
+    .btn-game-side {
+      background: #25d366;
     }
 
     .add-contact-box {
@@ -633,6 +637,118 @@
     }
 
     /* =========================
+       FLAPPY BIRD OYUN MODALI
+    ========================= */
+
+    .game-modal {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.65);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 200;
+      padding: 15px;
+    }
+
+    .game-card {
+      background: #ffffff;
+      width: 100%;
+      max-width: 360px;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .game-header {
+      width: 100%;
+      background: #008069;
+      color: white;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: bold;
+      font-size: 15px;
+    }
+
+    .close-game {
+      cursor: pointer;
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .game-score-bar {
+      width: 100%;
+      background: #f0f2f5;
+      padding: 8px 16px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: #111b21;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .canvas-container {
+      position: relative;
+      width: 320px;
+      height: 400px;
+      background: #70c5ce;
+      user-select: none;
+    }
+
+    canvas {
+      display: block;
+      width: 320px;
+      height: 400px;
+      cursor: pointer;
+    }
+
+    .game-screen-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.45);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .game-screen-overlay h3 {
+      margin: 0 0 10px 0;
+      font-size: 22px;
+    }
+
+    .game-screen-overlay p {
+      font-size: 13px;
+      margin-bottom: 15px;
+      line-height: 1.4;
+    }
+
+    .game-screen-overlay button {
+      background: #00a884;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    /* =========================
        MOBİL
     ========================= */
 
@@ -768,11 +884,15 @@
 
     </div>
 
-    <!-- ŞİFRE DEĞİŞTİRME BUTONU -->
+    <!-- ŞİFRE DEĞİŞTİRME VE OYUN OYNA BUTONLARI -->
     <div class="profile-password-box">
 
-      <button onclick="changePassword()">
+      <button class="btn-action-side" onclick="changePassword()">
         🔒 Şifreyi Değiştir
+      </button>
+
+      <button class="btn-action-side btn-game-side" onclick="openGameModal()">
+        🎮 Oyun Oyna (Flappy Bird)
       </button>
 
     </div>
@@ -883,6 +1003,37 @@
 </div>
 
 
+<!-- =========================
+     FLAPPY BIRD OYUN MODALI
+========================= -->
+
+<div id="game-modal" class="game-modal" style="display: none;">
+  <div class="game-card">
+
+    <div class="game-header">
+      <span>🕊️ Güvercin Uçur</span>
+      <span class="close-game" onclick="closeGameModal()">✕</span>
+    </div>
+
+    <div class="game-score-bar">
+      <span>Skor: <b id="game-score">0</b></span>
+      <span>En Yüksek Rekor: <b id="game-highscore">0</b></span>
+    </div>
+
+    <div class="canvas-container">
+      <canvas id="flappy-canvas" width="320" height="400"></canvas>
+
+      <div id="game-start-screen" class="game-screen-overlay">
+        <h3>Güvercin Uçur</h3>
+        <p>Ekrana Tıkla veya Boşluk (Space) Tuşuna Basarak Güvercini Havada Tut!</p>
+        <button onclick="startGame()">Oyuna Başla</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
 <script src="/socket.io/socket.io.js"></script>
 
 <script>
@@ -911,6 +1062,8 @@
   let userNamesMap = {};
 
   let pigeonBusy = false;
+
+  let myHighScore = 0;
 
 
   /* =========================
@@ -1090,6 +1243,8 @@
 
       userNamesMap = data.userNamesMap || {};
       allMessages = data.history || [];
+      myHighScore = data.highScore || 0;
+      document.getElementById('game-highscore').innerText = myHighScore;
 
 
       allMessages.forEach(
@@ -1146,6 +1301,16 @@
       document.getElementById('active-contact-title').innerText = `${data.name} (${data.phoneNumber})`;
       renderActiveChat();
     }
+  });
+
+
+  /* =========================
+     REKOR GÜNCEL KONTROLÜ
+  ========================= */
+
+  socket.on('score updated', function(data) {
+    myHighScore = data.highScore;
+    document.getElementById('game-highscore').innerText = myHighScore;
   });
 
 
@@ -1960,6 +2125,219 @@
 
       }
     );
+
+
+  /* =========================
+     FLAPPY BIRD OYUN MOTORU
+  ========================= */
+
+  const canvas = document.getElementById('flappy-canvas');
+  const ctx = canvas.getContext('2d');
+
+  let gameAnimationId = null;
+  let gameRunning = false;
+  let gameScore = 0;
+
+  let bird = {
+    x: 50,
+    y: 180,
+    velocity: 0,
+    gravity: 0.38,
+    jump: -6.5,
+    size: 20
+  };
+
+  let pipes = [];
+  let pipeWidth = 48;
+  let pipeGap = 120;
+  let pipeSpeed = 2;
+  let frameCount = 0;
+
+  function openGameModal() {
+    document.getElementById('game-modal').style.display = 'flex';
+    document.getElementById('game-highscore').innerText = myHighScore;
+    resetGame();
+  }
+
+  function closeGameModal() {
+    document.getElementById('game-modal').style.display = 'none';
+    gameRunning = false;
+    if (gameAnimationId) {
+      cancelAnimationFrame(gameAnimationId);
+    }
+  }
+
+  function resetGame() {
+    bird.y = 180;
+    bird.velocity = 0;
+    pipes = [];
+    gameScore = 0;
+    frameCount = 0;
+    document.getElementById('game-score').innerText = '0';
+    document.getElementById('game-start-screen').style.display = 'flex';
+    document.getElementById('game-start-screen').innerHTML = `
+      <h3>Güvercin Uçur</h3>
+      <p>Ekrana Tıkla veya Boşluk (Space) Tuşuna Basarak Güvercini Havada Tut!</p>
+      <button onclick="startGame()">Oyuna Başla</button>
+    `;
+    drawStaticScene();
+  }
+
+  function startGame() {
+    document.getElementById('game-start-screen').style.display = 'none';
+    bird.y = 180;
+    bird.velocity = 0;
+    pipes = [];
+    gameScore = 0;
+    frameCount = 0;
+    document.getElementById('game-score').innerText = '0';
+    gameRunning = true;
+
+    if (gameAnimationId) {
+      cancelAnimationFrame(gameAnimationId);
+    }
+
+    gameLoop();
+  }
+
+  function makeJump() {
+    if (!gameRunning) return;
+    bird.velocity = bird.jump;
+  }
+
+  canvas.addEventListener('click', function(e) {
+    if (gameRunning) {
+      makeJump();
+    }
+  });
+
+  window.addEventListener('keydown', function(e) {
+    if (e.code === 'Space') {
+      const modal = document.getElementById('game-modal');
+      if (modal.style.display !== 'none' && gameRunning) {
+        e.preventDefault();
+        makeJump();
+      }
+    }
+  });
+
+  function drawStaticScene() {
+    ctx.fillStyle = '#70c5ce';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Zemin
+    ctx.fillStyle = '#ded895';
+    ctx.fillRect(0, canvas.height - 30, canvas.width, 30);
+    ctx.fillStyle = '#008069';
+    ctx.fillRect(0, canvas.height - 30, canvas.width, 4);
+
+    // Güvercin
+    ctx.font = '24px sans-serif';
+    ctx.fillText('🕊️', bird.x - 12, bird.y + 8);
+  }
+
+  function gameLoop() {
+    if (!gameRunning) return;
+
+    frameCount++;
+
+    // Fizik
+    bird.velocity += bird.gravity;
+    bird.y += bird.velocity;
+
+    // Boru Üretimi
+    if (frameCount % 90 === 0) {
+      let minTop = 40;
+      let maxTop = canvas.height - 30 - pipeGap - 40;
+      let topHeight = Math.floor(Math.random() * (maxTop - minTop + 1)) + minTop;
+
+      pipes.push({
+        x: canvas.width,
+        topHeight: topHeight,
+        bottomY: topHeight + pipeGap,
+        passed: false
+      });
+    }
+
+    // Çizim Başlangıcı
+    ctx.fillStyle = '#70c5ce';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Boruları Çiz ve Taşı
+    for (let i = 0; i < pipes.length; i++) {
+      let p = pipes[i];
+      p.x -= pipeSpeed;
+
+      // Üst Boru
+      ctx.fillStyle = '#00a884';
+      ctx.fillRect(p.x, 0, pipeWidth, p.topHeight);
+      ctx.strokeStyle = '#005c4b';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(p.x, 0, pipeWidth, p.topHeight);
+
+      // Alt Boru
+      let bottomHeight = canvas.height - 30 - p.bottomY;
+      ctx.fillStyle = '#00a884';
+      ctx.fillRect(p.x, p.bottomY, pipeWidth, bottomHeight);
+      ctx.strokeRect(p.x, p.bottomY, pipeWidth, bottomHeight);
+
+      // Skor Artırımı
+      if (!p.passed && p.x + pipeWidth < bird.x) {
+        p.passed = true;
+        gameScore++;
+        document.getElementById('game-score').innerText = gameScore;
+      }
+
+      // Çarpışma Kontrolü
+      if (
+        bird.x + 10 > p.x &&
+        bird.x - 10 < p.x + pipeWidth &&
+        (bird.y - 10 < p.topHeight || bird.y + 10 > p.bottomY)
+      ) {
+        gameOver();
+        return;
+      }
+    }
+
+    // Boruları Temizle
+    pipes = pipes.filter(p => p.x + pipeWidth > 0);
+
+    // Zemin
+    ctx.fillStyle = '#ded895';
+    ctx.fillRect(0, canvas.height - 30, canvas.width, 30);
+    ctx.fillStyle = '#008069';
+    ctx.fillRect(0, canvas.height - 30, canvas.width, 4);
+
+    // Zemin veya Tavan Çarpışması
+    if (bird.y + 10 >= canvas.height - 30 || bird.y - 10 <= 0) {
+      gameOver();
+      return;
+    }
+
+    // Güvercini Çiz
+    ctx.font = '24px sans-serif';
+    ctx.fillText('🕊️', bird.x - 12, bird.y + 8);
+
+    gameAnimationId = requestAnimationFrame(gameLoop);
+  }
+
+  function gameOver() {
+    gameRunning = false;
+
+    // Rekor Kontrolü
+    if (gameScore > myHighScore) {
+      myHighScore = gameScore;
+      document.getElementById('game-highscore').innerText = myHighScore;
+      socket.emit('update score', { score: gameScore });
+    }
+
+    document.getElementById('game-start-screen').style.display = 'flex';
+    document.getElementById('game-start-screen').innerHTML = `
+      <h3>Oyun Bitti!</h3>
+      <p>Skorunuz: <b>${gameScore}</b><br>En Yüksek Rekor: <b>${myHighScore}</b></p>
+      <button onclick="startGame()">Yeniden Oyna</button>
+    `;
+  }
 
 </script>
 
