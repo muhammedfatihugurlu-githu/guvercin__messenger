@@ -2369,7 +2369,7 @@
     bird.velocity = bird.jump;
   }
 
-  // MOBİL DOKUNMA VE TIKLAMA OLAYLARI (Çift Tıklamayı & Titremeyi Engeller)
+  // MOBİL DOKUNMA VE TIKLAMA OLAYLARI
   canvas.addEventListener('pointerdown', makeJump, { passive: false });
 
   window.addEventListener('keydown', function(e) {
@@ -2463,23 +2463,13 @@
     }
   }
 
-  // TİTREMEYİ ENGELLEYEN TAM SAYI PİKSEL HİZALAMALI GÜVERCİN ÇİZİMİ
+  // TAMAMEN HAREKETSİZ, SABİT DİK DURAN GÜVERCİN ÇİZİMİ (Tüm titremeler kalktı)
   function drawBird() {
     ctx.save();
-    
-    // Math.round ile küsuratları yuvarlayarak mobil ekrandaki font titremesini bitiriyoruz
-    ctx.translate(Math.round(bird.x), Math.round(bird.y));
-
-    let angle = Math.min(Math.PI / 4, Math.max(-Math.PI / 4, bird.velocity * 0.08));
-    ctx.rotate(angle);
-
-    ctx.scale(-1, 1);
-
     ctx.font = '26px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('🕊️', 0, 0);
-
+    ctx.fillText('🕊️', Math.round(bird.x), Math.round(bird.y));
     ctx.restore();
   }
 
@@ -2496,7 +2486,6 @@
     if (!timestamp) timestamp = performance.now();
     let elapsed = timestamp - lastTime;
 
-    // Her karede maksimum 16.6ms (60 FPS) hesabı yaparak telefonlarda takılmayı/hızlanmayı önler
     if (elapsed > 12) {
       lastTime = timestamp - (elapsed % 16.6);
 
