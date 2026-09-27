@@ -665,6 +665,499 @@
       flex-direction: column;
     }
 
+    /* =========================
+       GÜVERCİN İMPARATORLUĞU - MODERN EKRAN
+    ========================= */
+
+    .game-card.empire-mode {
+      width: min(920px, 96vw);
+      max-width: 920px;
+      height: min(900px, 94vh);
+      max-height: 94vh;
+      background: #09131a;
+      border: 1px solid rgba(52, 211, 153, 0.18);
+      border-radius: 22px;
+      box-shadow:
+        0 25px 80px rgba(0, 0, 0, 0.55),
+        0 0 0 1px rgba(255,255,255,0.03);
+      position: relative;
+    }
+
+    .game-card.empire-mode .game-header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 20;
+      background: transparent;
+      pointer-events: none;
+      padding: 16px 18px;
+      height: 58px;
+    }
+
+    .game-card.empire-mode .game-header #game-header-title {
+      display: none;
+    }
+
+    .game-card.empire-mode .close-game {
+      pointer-events: auto;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.35);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 22px;
+      margin-left: auto;
+      backdrop-filter: blur(8px);
+    }
+
+    .empire-screen {
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at 50% 16%, rgba(0, 184, 148, 0.12), transparent 30%),
+        linear-gradient(180deg, #08151d 0%, #0b1820 48%, #0d1c24 100%);
+      color: #edfdf8;
+      display: flex;
+      flex-direction: column;
+      scrollbar-width: thin;
+      scrollbar-color: #18c58d #0c1b23;
+    }
+
+    .empire-screen::-webkit-scrollbar {
+      width: 7px;
+    }
+
+    .empire-screen::-webkit-scrollbar-track {
+      background: #0c1b23;
+    }
+
+    .empire-screen::-webkit-scrollbar-thumb {
+      background: #18c58d;
+      border-radius: 20px;
+    }
+
+    .empire-header {
+      flex: 0 0 auto;
+      padding: 24px 30px 20px;
+      background:
+        linear-gradient(180deg, rgba(16, 31, 40, 0.98), rgba(8, 20, 27, 0.96));
+      border-bottom: 1px solid rgba(34, 211, 153, 0.65);
+      position: relative;
+    }
+
+    .empire-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .empire-game-title {
+      color: #20d993;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.2px;
+    }
+
+    .empire-top-btns {
+      display: flex;
+      gap: 8px;
+    }
+
+    .empire-icon-btn {
+      width: 38px;
+      height: 38px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 11px;
+      background: #152630;
+      color: white;
+      cursor: pointer;
+      font-size: 17px;
+    }
+
+    .empire-total-earned-corner {
+      position: absolute;
+      right: 30px;
+      top: 70px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      color: #718995;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .empire-total-money-val {
+      color: #20d993;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .empire-money-area {
+      text-align: center;
+      padding: 8px 90px 18px;
+    }
+
+    .empire-money-display {
+      color: #25df75;
+      font-size: clamp(38px, 7vw, 64px);
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: -2px;
+      text-shadow: 0 0 28px rgba(37, 223, 117, 0.12);
+    }
+
+    .empire-stats-sub {
+      margin-top: 8px;
+      color: #8296a0;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .empire-stats-sub b {
+      color: #e7f8f2;
+    }
+
+    .empire-level-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .empire-level-badge {
+      flex: 0 0 auto;
+      background: #12b98b;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 9px;
+      font-size: 12px;
+      font-weight: 800;
+      box-shadow: 0 4px 16px rgba(18,185,139,0.18);
+    }
+
+    .empire-progress-bar-bg {
+      flex: 1;
+      height: 9px;
+      background: #263943;
+      border-radius: 99px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    .empire-progress-bar-fill {
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #08b985, #25df75);
+      transition: width 0.25s ease;
+    }
+
+    .empire-click-section {
+      flex: 1 1 auto;
+      min-height: 260px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at center, rgba(27, 171, 129, 0.09), transparent 34%),
+        radial-gradient(circle at center, rgba(255,255,255,0.025), transparent 58%);
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    .empire-click-section::before {
+      content: "";
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.06), transparent 68%);
+      filter: blur(2px);
+    }
+
+    .empire-pigeon-clicker {
+      position: relative;
+      z-index: 2;
+      width: 190px;
+      height: 190px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 112px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      transform: translateZ(0);
+      transition: transform 0.08s ease, filter 0.15s ease;
+      filter: drop-shadow(0 18px 25px rgba(0,0,0,0.35));
+    }
+
+    .empire-pigeon-clicker:hover {
+      transform: scale(1.04);
+      filter: drop-shadow(0 20px 30px rgba(0,0,0,0.4));
+    }
+
+    .empire-pigeon-clicker:active {
+      transform: scale(0.91);
+    }
+
+    .empire-floating-text {
+      position: absolute;
+      z-index: 10;
+      color: #3bea82;
+      font-size: 23px;
+      font-weight: 900;
+      pointer-events: none;
+      animation: empireFloatUp 0.8s ease-out forwards;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+
+    @keyframes empireFloatUp {
+      from { opacity: 1; transform: translateY(0) scale(1); }
+      to { opacity: 0; transform: translateY(-65px) scale(1.12); }
+    }
+
+    .empire-toast {
+      position: fixed;
+      left: 50%;
+      bottom: 28px;
+      transform: translateX(-50%);
+      z-index: 999;
+      display: none;
+      padding: 11px 17px;
+      border-radius: 12px;
+      background: rgba(8, 18, 24, 0.94);
+      border: 1px solid rgba(32, 217, 147, 0.4);
+      color: white;
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+      backdrop-filter: blur(8px);
+    }
+
+    .empire-upgrades-section {
+      flex: 0 0 auto;
+      padding: 20px 30px 28px;
+      background: #0c1a22;
+    }
+
+    .empire-section-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      margin-bottom: 14px;
+    }
+
+    .empire-section-title {
+      color: #9eb0b9;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .empire-save-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .empire-save-btn,
+    .empire-menu-btn {
+      border: 0;
+      border-radius: 9px;
+      padding: 9px 13px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .empire-save-btn {
+      background: #20d96f;
+      color: #06130c;
+    }
+
+    .empire-save-btn:disabled {
+      opacity: 0.65;
+      cursor: wait;
+    }
+
+    .empire-menu-btn {
+      background: #253640;
+      color: #e7f3ef;
+      border: 1px solid rgba(255,255,255,0.07);
+    }
+
+    .empire-upgrade-card {
+      background: linear-gradient(145deg, #14252e, #102029);
+      border: 1px solid #263d48;
+      border-radius: 14px;
+      padding: 14px;
+      margin-top: 10px;
+      box-shadow: 0 7px 20px rgba(0,0,0,0.12);
+    }
+
+    .empire-uc-top {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+    }
+
+    .empire-upgrade-icon {
+      width: 52px;
+      height: 52px;
+      flex: 0 0 52px;
+      border-radius: 13px;
+      background: #0a171e;
+      border: 1px solid #263d48;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 27px;
+    }
+
+    .empire-upgrade-info {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .empire-upgrade-title {
+      color: #edf8f4;
+      font-size: 15px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .empire-upgrade-tier {
+      color: #1ed19b;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .empire-upgrade-desc {
+      color: #7f949e;
+      font-size: 11px;
+      line-height: 1.4;
+      margin-top: 4px;
+    }
+
+    .empire-upgrade-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+      margin-top: 13px;
+    }
+
+    .empire-action-btn {
+      min-height: 48px;
+      border-radius: 10px;
+      border: 1px solid #314853;
+      background: #1c303a;
+      color: #687e88;
+      font-weight: 800;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .empire-action-btn.can-afford {
+      color: white;
+    }
+
+    .empire-btn-buy.can-afford {
+      background: #08b78a;
+      border-color: #08b78a;
+    }
+
+    .empire-btn-upgrade.can-afford {
+      background: #f5a20b;
+      border-color: #f5a20b;
+      color: #101010;
+    }
+
+    @media (max-width: 768px) {
+      .game-card.empire-mode {
+        width: 100%;
+        max-width: none;
+        height: 100%;
+        max-height: none;
+        border-radius: 0;
+        border: 0;
+      }
+
+      .empire-header {
+        padding: 22px 16px 17px;
+      }
+
+      .empire-total-earned-corner {
+        right: 16px;
+        top: 63px;
+      }
+
+      .empire-money-area {
+        padding: 13px 10px 17px;
+      }
+
+      .empire-money-display {
+        font-size: 45px;
+      }
+
+      .empire-stats-sub {
+        font-size: 11px;
+      }
+
+      .empire-click-section {
+        min-height: 230px;
+      }
+
+      .empire-pigeon-clicker {
+        width: 160px;
+        height: 160px;
+        font-size: 92px;
+      }
+
+      .empire-upgrades-section {
+        padding: 17px 14px 24px;
+      }
+
+      .empire-section-title-row {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .empire-save-buttons {
+        width: 100%;
+      }
+
+      .empire-save-btn,
+      .empire-menu-btn {
+        flex: 1;
+      }
+
+      .empire-upgrade-title {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .empire-upgrade-actions {
+        grid-template-columns: 1fr;
+      }
+    }
+
     .game-header {
       width: 100%;
       background: #008069;
@@ -1130,7 +1623,7 @@
         <div class="game-item-card">
           <div class="game-item-icon">🕊️</div>
           <div class="game-item-info">
-            <div class="game-item-name">Güvercin Uçur (Flappy Bird)</div>
+            <div class="game-item-name">Güvercin Uçur</div>
             <div class="game-item-desc">Engellere takılmadan en yüksek skoru yap!</div>
             <div class="game-item-score">En Yüksek Rekor: <span id="menu-highscore">0</span></div>
           </div>
@@ -1138,7 +1631,7 @@
         </div>
 
         <div class="game-item-card">
-          <div class="game-item-icon">👑🕊️</div>
+          <div class="game-item-icon">👑</div>
           <div class="game-item-info">
             <div class="game-item-name">Güvercin İmparatorluğu</div>
             <div class="game-item-desc">Para kazan, güvercinlerini geliştir ve imparatorluğunu büyüt!</div>
@@ -2295,6 +2788,7 @@
   /* =========================
      GÜVERCİN İMPARATORLUĞU
   ========================= */
+  let empireGameActive = false;
   let empireSoundEnabled = true;
   let empireAudioCtx = null;
   let empireState = {money:0,totalEarned:0,level:1,upgrades:{bag:{name:"Mektup Çantası",icon:"💼",count:0,baseCost:10,tier:1,tierBaseCost:120,powerPerTier:1,desc:"Manuel tıklama gücünü artırır."},bird:{name:"Yavru Güvercin",icon:"🐣",count:0,baseCost:35,tier:1,tierBaseCost:300,powerPerTier:1,desc:"Saniyede otomatik para kazandırır."}}};
@@ -2317,14 +2811,14 @@
   function checkEmpireLevelUp(){let r=getEmpireNextLevelReq();while(empireState.totalEarned>=r){empireState.level++;playEmpireSound('levelup');showEmpireToast('👑 Seviye '+empireState.level+"'e ulaştın!");r=getEmpireNextLevelReq();}}
   function buyEmpireItem(k){let c=getEmpireBuyCost(k);if(empireState.money<c)return;empireState.money-=c;empireState.upgrades[k].count++;playEmpireSound('buy');saveEmpireLocal();updateEmpireUI();}
   function upgradeEmpireTier(k){let c=getEmpireTierCost(k);if(empireState.money<c)return;empireState.money-=c;empireState.upgrades[k].tier++;playEmpireSound('upgrade');showEmpireToast('⭐ '+empireState.upgrades[k].name+' seviyesi arttı!');saveEmpireLocal();updateEmpireUI();}
-  document.getElementById('empire-pigeon-btn').addEventListener('pointerdown',e=>{playEmpireSound('click');let p=getEmpireClickPower();empireState.money+=p;empireState.totalEarned+=p;checkEmpireLevelUp();saveEmpireLocal();updateEmpireUI();let f=document.createElement('div');f.className='empire-floating-text';f.innerText='+'+formatEmpireNum(p);let r=document.getElementById('empire-click-area').getBoundingClientRect();f.style.left=(e.clientX-r.left-10)+'px';f.style.top=(e.clientY-r.top-20)+'px';document.getElementById('empire-click-area').appendChild(f);setTimeout(()=>f.remove(),800);});
-  setInterval(()=>{let c=getEmpireCPS();if(c>0){let a=c/10;empireState.money+=a;empireState.totalEarned+=a;checkEmpireLevelUp();saveEmpireLocal();updateEmpireUI();}},100);
+  document.getElementById('empire-pigeon-btn').addEventListener('pointerdown',e=>{if(!empireGameActive)return;playEmpireSound('click');let p=getEmpireClickPower();empireState.money+=p;empireState.totalEarned+=p;checkEmpireLevelUp();saveEmpireLocal();updateEmpireUI();let f=document.createElement('div');f.className='empire-floating-text';f.innerText='+'+formatEmpireNum(p);let r=document.getElementById('empire-click-area').getBoundingClientRect();f.style.left=(e.clientX-r.left-10)+'px';f.style.top=(e.clientY-r.top-20)+'px';document.getElementById('empire-click-area').appendChild(f);setTimeout(()=>f.remove(),800);});
+  setInterval(()=>{if(!empireGameActive)return;let c=getEmpireCPS();if(c>0){let a=c/10;empireState.money+=a;empireState.totalEarned+=a;checkEmpireLevelUp();saveEmpireLocal();updateEmpireUI();}},100);
   setInterval(()=>saveEmpireLocal(),3000);
   function saveEmpireToFirebase(){if(!myPhone||!socket.connected){showEmpireToast('❌ Sunucu bağlantısı yok!');return;}saveEmpireLocal();let b=document.getElementById('empire-save-btn');b.disabled=true;b.innerText='⏳ Kaydediliyor...';socket.emit('save empire game',{state:empireState});}
   socket.on('empire game saved',d=>{let b=document.getElementById('empire-save-btn');b.disabled=false;b.innerText='💾 Kaydet';showEmpireToast(d&&d.success?'✅ Firebase\'e kaydedildi!':'❌ Kayıt başarısız!');});
-  function openEmpireGame(){stopGameLoop();document.getElementById('game-header-title').innerText='👑🕊️ Güvercin İmparatorluğu';document.getElementById('game-menu-screen').style.display='none';document.getElementById('game-play-screen').style.display='none';document.getElementById('empire-play-screen').style.display='flex';updateEmpireUI();}
-  function selectGame(t){if(t==='flappy'){document.getElementById('game-header-title').innerText='🕊️ Güvercin Uçur';document.getElementById('game-menu-screen').style.display='none';document.getElementById('game-play-screen').style.display='flex';document.getElementById('empire-play-screen').style.display='none';document.getElementById('game-highscore').innerText=myHighScore;resetGame();}else if(t==='empire'){openEmpireGame();}}
-  function showGameMenu(){stopGameLoop();document.getElementById('game-header-title').innerText='🎮 Oyun Salonu';document.getElementById('game-menu-screen').style.display='flex';document.getElementById('game-play-screen').style.display='none';document.getElementById('empire-play-screen').style.display='none';document.getElementById('menu-highscore').innerText=myHighScore;updateEmpireUI();}
+  function openEmpireGame(){empireGameActive=true;stopGameLoop();document.querySelector('.game-card').classList.add('empire-mode');document.getElementById('game-header-title').innerText='👑🕊️ Güvercin İmparatorluğu';document.getElementById('game-menu-screen').style.display='none';document.getElementById('game-play-screen').style.display='none';document.getElementById('empire-play-screen').style.display='flex';updateEmpireUI();}
+  function selectGame(t){if(t==='flappy'){document.querySelector('.game-card').classList.remove('empire-mode');document.getElementById('game-header-title').innerText='🕊️ Güvercin Uçur';document.getElementById('game-menu-screen').style.display='none';document.getElementById('game-play-screen').style.display='flex';document.getElementById('empire-play-screen').style.display='none';document.getElementById('game-highscore').innerText=myHighScore;resetGame();}else if(t==='empire'){openEmpireGame();}}
+  function showGameMenu(){empireGameActive=false;stopGameLoop();document.querySelector('.game-card').classList.remove('empire-mode');document.getElementById('game-header-title').innerText='🎮 Oyun Salonu';document.getElementById('game-menu-screen').style.display='flex';document.getElementById('game-play-screen').style.display='none';document.getElementById('empire-play-screen').style.display='none';document.getElementById('menu-highscore').innerText=myHighScore;updateEmpireUI();}
   loadEmpireLocal();updateEmpireUI();
 
   /* =========================
