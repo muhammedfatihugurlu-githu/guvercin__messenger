@@ -1130,7 +1130,7 @@
         <div class="game-item-card">
           <div class="game-item-icon">🕊️</div>
           <div class="game-item-info">
-            <div class="game-item-name">Güvercin Uçur (Flappy Bird)</div>
+            <div class="game-item-name">Güvercin Uçur</div>
             <div class="game-item-desc">Engellere takılmadan en yüksek skoru yap!</div>
             <div class="game-item-score">En Yüksek Rekor: <span id="menu-highscore">0</span></div>
           </div>
@@ -1138,7 +1138,7 @@
         </div>
 
         <div class="game-item-card">
-          <div class="game-item-icon">👑🕊️</div>
+          <div class="game-item-icon">🕊️</div>
           <div class="game-item-info">
             <div class="game-item-name">Güvercin İmparatorluğu</div>
             <div class="game-item-desc">Para kazan, güvercinlerini geliştir ve imparatorluğunu büyüt!</div>
@@ -2297,7 +2297,7 @@
   ========================= */
   let empireSoundEnabled = true;
   let empireAudioCtx = null;
-  let empireState = {money:0,totalEarned:0,level:1,upgrades:{bag:{name:"Mektup Çantası",icon:"💼",count:0,baseCost:10,tier:1,tierBaseCost:120,powerPerTier:1,desc:"Manuel tıklama gücünü artırır."},bird:{name:"Yavru Güvercin",icon:"🐣",count:0,baseCost:35,tier:1,tierBaseCost:300,powerPerTier:1,desc:"Saniyede otomatik para kazandırır."}}};
+  let empireState = {money:0,totalEarned:0,level:1,upgrades:{bag:{name:"Tıklama Gücü",icon:"👆🏼",count:0,baseCost:10,tier:1,tierBaseCost:120,powerPerTier:1,desc:"Manuel tıklama gücünü artırır."},bird:{name:"Yavru Güvercin",icon:"🐣",count:0,baseCost:35,tier:1,tierBaseCost:300,powerPerTier:1,desc:"Saniyede otomatik para kazandırır."}}};
   function formatEmpireNum(n){if(n<1000)return Math.floor(n).toLocaleString('tr-TR');if(n<1e6)return(n/1e3).toFixed(1)+' Bin';if(n<1e9)return(n/1e6).toFixed(2)+' Milyon';return(n/1e9).toFixed(2)+' Milyar';}
   function getEmpireBagPower(){return empireState.upgrades.bag.tier*empireState.upgrades.bag.powerPerTier;}
   function getEmpireBirdPower(){return empireState.upgrades.bird.tier*empireState.upgrades.bird.powerPerTier;}
