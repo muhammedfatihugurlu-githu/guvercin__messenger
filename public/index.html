@@ -1136,6 +1136,16 @@
           </div>
           <button class="btn-play-game" onclick="selectGame('flappy')">Oyna</button>
         </div>
+
+        <div class="game-item-card">
+          <div class="game-item-icon">👑🕊️</div>
+          <div class="game-item-info">
+            <div class="game-item-name">Güvercin İmparatorluğu</div>
+            <div class="game-item-desc">Para kazan, güvercinlerini geliştir ve imparatorluğunu büyüt!</div>
+            <div class="game-item-score">Seviye: <span id="menu-empire-level">1</span> · Bakiye: <span id="menu-empire-money">0 ₺</span></div>
+          </div>
+          <button class="btn-play-game" onclick="selectGame('empire')">Oyna</button>
+        </div>
       </div>
     </div>
 
@@ -1155,6 +1165,22 @@
           <p>Ekrana Tıkla veya Boşluk Tuşuna Basarak Güvercini Havada Tut!</p>
           <button onclick="startGame()">Başla</button>
         </div>
+      </div>
+    </div>
+
+    <!-- 3. EKRAN: GÜVERCİN İMPARATORLUĞU -->
+    <div id="empire-play-screen" class="empire-screen" style="display:none;">
+      <div class="empire-toast" id="empire-toast">Mesaj</div>
+      <div class="empire-header">
+        <div class="empire-title-row"><span class="empire-game-title">🕊️ Güvercin İmparatorluğu</span><div class="empire-top-btns"><button class="empire-icon-btn" onclick="toggleEmpireSound()" id="empire-sound-btn">🔊</button></div></div>
+        <div class="empire-total-earned-corner"><span>Toplam Toplanan:</span><span class="empire-total-money-val" id="empire-total-earned-text">0 ₺</span></div>
+        <div class="empire-money-area"><div class="empire-money-display" id="empire-money-text">0 ₺</div><div class="empire-stats-sub">Tıklama Gücü: <b id="empire-click-power-text">1 ₺</b> | Saniye Başı: <b id="empire-cps-text">0 ₺/sn</b></div></div>
+        <div class="empire-level-container"><span class="empire-level-badge" id="empire-level-badge">Seviye 1</span><div class="empire-progress-bar-bg"><div class="empire-progress-bar-fill" id="empire-level-progress"></div></div></div>
+      </div>
+      <div class="empire-click-section" id="empire-click-area"><div class="empire-pigeon-clicker" id="empire-pigeon-btn">🕊️</div></div>
+      <div class="empire-upgrades-section">
+        <div class="empire-section-title-row"><div class="empire-section-title">Mağaza & Yükseltmeler</div><div class="empire-save-buttons"><button class="empire-save-btn" id="empire-save-btn" onclick="saveEmpireToFirebase()">💾 Kaydet</button><button class="empire-menu-btn" onclick="showGameMenu()">◀ Menü</button></div></div>
+        <div id="empire-upgrades-container"></div>
       </div>
     </div>
 
@@ -1192,6 +1218,7 @@
   let pigeonBusy = false;
 
   let myHighScore = 0;
+  let empireLoadedFromServer = false;
 
 
   /* =========================
@@ -1375,6 +1402,12 @@
       // Rekor sayısını kesin sayıya (integer) dönüştürüyoruz
       myHighScore = parseInt(data.highScore || 0, 10);
       document.getElementById('menu-highscore').innerText = myHighScore;
+
+      if (data.empireGameState) {
+        mergeEmpireState(data.empireGameState);
+        saveEmpireLocal();
+      }
+      updateEmpireUI();
       document.getElementById('game-highscore').innerText = myHighScore;
 
 
@@ -2260,6 +2293,41 @@
 
 
   /* =========================
+     GÜVERCİN İMPARATORLUĞU
+  ========================= */
+  let empireSoundEnabled = true;
+  let empireAudioCtx = null;
+  let empireState = {money:0,totalEarned:0,level:1,upgrades:{bag:{name:"Mektup Çantası",icon:"💼",count:0,baseCost:10,tier:1,tierBaseCost:120,powerPerTier:1,desc:"Manuel tıklama gücünü artırır."},bird:{name:"Yavru Güvercin",icon:"🐣",count:0,baseCost:35,tier:1,tierBaseCost:300,powerPerTier:1,desc:"Saniyede otomatik para kazandırır."}}};
+  function formatEmpireNum(n){if(n<1000)return Math.floor(n).toLocaleString('tr-TR');if(n<1e6)return(n/1e3).toFixed(1)+' Bin';if(n<1e9)return(n/1e6).toFixed(2)+' Milyon';return(n/1e9).toFixed(2)+' Milyar';}
+  function getEmpireBagPower(){return empireState.upgrades.bag.tier*empireState.upgrades.bag.powerPerTier;}
+  function getEmpireBirdPower(){return empireState.upgrades.bird.tier*empireState.upgrades.bird.powerPerTier;}
+  function getEmpireClickPower(){return 1+empireState.upgrades.bag.count*getEmpireBagPower();}
+  function getEmpireCPS(){return empireState.upgrades.bird.count*getEmpireBirdPower();}
+  function getEmpireBuyCost(k){let u=empireState.upgrades[k];return Math.floor(u.baseCost*Math.pow(1.12,u.count));}
+  function getEmpireTierCost(k){let u=empireState.upgrades[k];return Math.floor(u.tierBaseCost*Math.pow(2.2,u.tier-1));}
+  function getEmpireNextLevelReq(){return Math.floor(80*Math.pow(1.6,empireState.level-1));}
+  function showEmpireToast(m){let e=document.getElementById('empire-toast');if(!e)return;e.innerText=m;e.style.display='block';clearTimeout(window.empireToastTimer);window.empireToastTimer=setTimeout(()=>e.style.display='none',2200);}
+  function toggleEmpireSound(){empireSoundEnabled=!empireSoundEnabled;document.getElementById('empire-sound-btn').innerText=empireSoundEnabled?'🔊':'🔇';}
+  function playEmpireSound(t){if(!empireSoundEnabled)return;try{if(!empireAudioCtx)empireAudioCtx=new(window.AudioContext||window.webkitAudioContext)();if(empireAudioCtx.state==='suspended')empireAudioCtx.resume();let o=empireAudioCtx.createOscillator(),g=empireAudioCtx.createGain(),n=empireAudioCtx.currentTime;o.connect(g);g.connect(empireAudioCtx.destination);if(t==='click'){o.frequency.setValueAtTime(400,n);o.frequency.exponentialRampToValueAtTime(800,n+.04);g.gain.setValueAtTime(.12,n);g.gain.linearRampToValueAtTime(.01,n+.04);o.start(n);o.stop(n+.04);}else{o.frequency.setValueAtTime(t==='buy'?350:523,n);o.frequency.setValueAtTime(t==='buy'?700:659,n+.08);g.gain.setValueAtTime(.15,n);g.gain.linearRampToValueAtTime(.01,n+.15);o.start(n);o.stop(n+.15);}}catch(e){}}
+  function mergeEmpireState(s){if(!s||typeof s!=='object')return;empireState={...empireState,...s,upgrades:{...empireState.upgrades,...(s.upgrades||{}),bag:{...empireState.upgrades.bag,...((s.upgrades||{}).bag||{})},bird:{...empireState.upgrades.bird,...((s.upgrades||{}).bird||{})}}};empireState.money=Number(empireState.money)||0;empireState.totalEarned=Number(empireState.totalEarned)||0;empireState.level=Math.max(1,Number(empireState.level)||1);}
+  function saveEmpireLocal(){if(myPhone)localStorage.setItem('pigeon_empire_state_'+myPhone,JSON.stringify(empireState));}
+  function loadEmpireLocal(){let s=localStorage.getItem('pigeon_empire_state_'+myPhone);if(s)try{mergeEmpireState(JSON.parse(s));}catch(e){}}
+  function updateEmpireUI(){let m=document.getElementById('empire-money-text');if(!m)return;document.getElementById('empire-total-earned-text').innerText=formatEmpireNum(empireState.totalEarned)+' ₺';m.innerText=formatEmpireNum(empireState.money)+' ₺';document.getElementById('empire-click-power-text').innerText=formatEmpireNum(getEmpireClickPower())+' ₺';document.getElementById('empire-cps-text').innerText=formatEmpireNum(getEmpireCPS())+' ₺/sn';document.getElementById('empire-level-badge').innerText='Seviye '+empireState.level;let p=empireState.level===1?0:Math.floor(80*Math.pow(1.6,empireState.level-2)),n=getEmpireNextLevelReq();document.getElementById('empire-level-progress').style.width=Math.min(100,Math.max(0,((empireState.totalEarned-p)/Math.max(1,n-p))*100))+'%';document.getElementById('menu-empire-level').innerText=empireState.level;document.getElementById('menu-empire-money').innerText=formatEmpireNum(empireState.money)+' ₺';renderEmpireUpgrades();}
+  function renderEmpireUpgrades(){let c=document.getElementById('empire-upgrades-container');if(!c)return;c.innerHTML='';Object.keys(empireState.upgrades).forEach(k=>{let u=empireState.upgrades[k],bc=getEmpireBuyCost(k),tc=getEmpireTierCost(k),power=k==='bag'?getEmpireBagPower():getEmpireBirdPower(),next=(u.tier+1)*u.powerPerTier,d=document.createElement('div');d.className='empire-upgrade-card';d.innerHTML=`<div class="empire-uc-top"><div class="empire-upgrade-icon">${u.icon}</div><div class="empire-upgrade-info"><div class="empire-upgrade-title">${u.name}<span class="empire-upgrade-tier">T${u.tier} (+${formatEmpireNum(power)} Güç)</span></div><div class="empire-upgrade-desc">${u.desc} Sahip olunan: ${u.count}</div></div></div><div class="empire-upgrade-actions"><button class="empire-action-btn empire-btn-buy ${empireState.money>=bc?'can-afford':''}" onclick="buyEmpireItem('${k}')">Satın Al (+1)<br>${formatEmpireNum(bc)} ₺</button><button class="empire-action-btn empire-btn-upgrade ${empireState.money>=tc?'can-afford':''}" onclick="upgradeEmpireTier('${k}')">Yükselt → +${formatEmpireNum(next)}<br>${formatEmpireNum(tc)} ₺</button></div>`;c.appendChild(d);});}
+  function checkEmpireLevelUp(){let r=getEmpireNextLevelReq();while(empireState.totalEarned>=r){empireState.level++;playEmpireSound('levelup');showEmpireToast('👑 Seviye '+empireState.level+"'e ulaştın!");r=getEmpireNextLevelReq();}}
+  function buyEmpireItem(k){let c=getEmpireBuyCost(k);if(empireState.money<c)return;empireState.money-=c;empireState.upgrades[k].count++;playEmpireSound('buy');saveEmpireLocal();updateEmpireUI();}
+  function upgradeEmpireTier(k){let c=getEmpireTierCost(k);if(empireState.money<c)return;empireState.money-=c;empireState.upgrades[k].tier++;playEmpireSound('upgrade');showEmpireToast('⭐ '+empireState.upgrades[k].name+' seviyesi arttı!');saveEmpireLocal();updateEmpireUI();}
+  document.getElementById('empire-pigeon-btn').addEventListener('pointerdown',e=>{playEmpireSound('click');let p=getEmpireClickPower();empireState.money+=p;empireState.totalEarned+=p;checkEmpireLevelUp();saveEmpireLocal();updateEmpireUI();let f=document.createElement('div');f.className='empire-floating-text';f.innerText='+'+formatEmpireNum(p);let r=document.getElementById('empire-click-area').getBoundingClientRect();f.style.left=(e.clientX-r.left-10)+'px';f.style.top=(e.clientY-r.top-20)+'px';document.getElementById('empire-click-area').appendChild(f);setTimeout(()=>f.remove(),800);});
+  setInterval(()=>{let c=getEmpireCPS();if(c>0){let a=c/10;empireState.money+=a;empireState.totalEarned+=a;checkEmpireLevelUp();saveEmpireLocal();updateEmpireUI();}},100);
+  setInterval(()=>saveEmpireLocal(),3000);
+  function saveEmpireToFirebase(){if(!myPhone||!socket.connected){showEmpireToast('❌ Sunucu bağlantısı yok!');return;}saveEmpireLocal();let b=document.getElementById('empire-save-btn');b.disabled=true;b.innerText='⏳ Kaydediliyor...';socket.emit('save empire game',{state:empireState});}
+  socket.on('empire game saved',d=>{let b=document.getElementById('empire-save-btn');b.disabled=false;b.innerText='💾 Kaydet';showEmpireToast(d&&d.success?'✅ Firebase\'e kaydedildi!':'❌ Kayıt başarısız!');});
+  function openEmpireGame(){stopGameLoop();document.getElementById('game-header-title').innerText='👑🕊️ Güvercin İmparatorluğu';document.getElementById('game-menu-screen').style.display='none';document.getElementById('game-play-screen').style.display='none';document.getElementById('empire-play-screen').style.display='flex';updateEmpireUI();}
+  function selectGame(t){if(t==='flappy'){document.getElementById('game-header-title').innerText='🕊️ Güvercin Uçur';document.getElementById('game-menu-screen').style.display='none';document.getElementById('game-play-screen').style.display='flex';document.getElementById('empire-play-screen').style.display='none';document.getElementById('game-highscore').innerText=myHighScore;resetGame();}else if(t==='empire'){openEmpireGame();}}
+  function showGameMenu(){stopGameLoop();document.getElementById('game-header-title').innerText='🎮 Oyun Salonu';document.getElementById('game-menu-screen').style.display='flex';document.getElementById('game-play-screen').style.display='none';document.getElementById('empire-play-screen').style.display='none';document.getElementById('menu-highscore').innerText=myHighScore;updateEmpireUI();}
+  loadEmpireLocal();updateEmpireUI();
+
+  /* =========================
      FLAPPY BIRD OYUN MOTORU (TAM SABİT HIZ & REKOR DÜZELTME)
   ========================= */
 
@@ -2306,24 +2374,6 @@
   function closeGameModal() {
     document.getElementById('game-modal').style.display = 'none';
     stopGameLoop();
-  }
-
-  function showGameMenu() {
-    stopGameLoop();
-    document.getElementById('game-header-title').innerText = '🎮 Oyun Salonu';
-    document.getElementById('game-menu-screen').style.display = 'flex';
-    document.getElementById('game-play-screen').style.display = 'none';
-    document.getElementById('menu-highscore').innerText = myHighScore;
-  }
-
-  function selectGame(gameType) {
-    if (gameType === 'flappy') {
-      document.getElementById('game-header-title').innerText = '🕊️ Güvercin Uçur';
-      document.getElementById('game-menu-screen').style.display = 'none';
-      document.getElementById('game-play-screen').style.display = 'flex';
-      document.getElementById('game-highscore').innerText = myHighScore;
-      resetGame();
-    }
   }
 
   function stopGameLoop() {
