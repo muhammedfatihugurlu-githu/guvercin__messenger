@@ -1475,7 +1475,7 @@
         id="my-name-input"
         type="text"
         placeholder="Kullanıcı Adınızı Girin..."
-        maxlength="25"
+        maxlength="30"
       />
 
       <button onclick="saveMyName()">
@@ -1623,7 +1623,7 @@
         <div class="game-item-card">
           <div class="game-item-icon">🕊️</div>
           <div class="game-item-info">
-            <div class="game-item-name">Güvercin Uçur (Flappy Bird)</div>
+            <div class="game-item-name">Güvercin Uçur</div>
             <div class="game-item-desc">Engellere takılmadan en yüksek skoru yap!</div>
             <div class="game-item-score">En Yüksek Rekor: <span id="menu-highscore">0</span></div>
           </div>
@@ -1631,11 +1631,11 @@
         </div>
 
         <div class="game-item-card">
-          <div class="game-item-icon">👑🕊️</div>
+          <div class="game-item-icon">👑</div>
           <div class="game-item-info">
             <div class="game-item-name">Güvercin İmparatorluğu</div>
-            <div class="game-item-desc">Para kazan, güvercinlerini geliştir ve imparatorluğunu büyüt!</div>
-            <div class="game-item-score">Seviye: <span id="menu-empire-level">1</span> · Bakiye: <span id="menu-empire-money">0 ₺</span></div>
+            <div class="game-item-desc">Para kazan, güvercinlerini geliştir ve imparatorluğunu büyüt! Kaydetmeyi Unutma!</div>
+            <div class="game-item-score">Seviye: <span id="menu-empire-level">1</span></div>
           </div>
           <button class="btn-play-game" onclick="selectGame('empire')">Oyna</button>
         </div>
@@ -2791,7 +2791,7 @@
   let empireGameActive = false;
   let empireSoundEnabled = true;
   let empireAudioCtx = null;
-  let empireState = {money:0,totalEarned:0,level:1,upgrades:{bag:{name:"Mektup Çantası",icon:"💼",count:0,baseCost:10,tier:1,tierBaseCost:120,powerPerTier:1,desc:"Manuel tıklama gücünü artırır."},bird:{name:"Yavru Güvercin",icon:"🐣",count:0,baseCost:35,tier:1,tierBaseCost:300,powerPerTier:1,desc:"Saniyede otomatik para kazandırır."}}};
+  let empireState = {money:0,totalEarned:0,level:1,upgrades:{bag:{name:"Tıklama Gücü",icon:"👆🏼",count:0,baseCost:10,tier:1,tierBaseCost:120,powerPerTier:1,desc:"Manuel tıklama gücünü artırır."},bird:{name:"Yavru Güvercin",icon:"🐣",count:0,baseCost:35,tier:1,tierBaseCost:300,powerPerTier:1,desc:"Saniyede otomatik para kazandırır."}}};
   function formatEmpireNum(n){if(n<1000)return Math.floor(n).toLocaleString('tr-TR');if(n<1e6)return(n/1e3).toFixed(1)+' Bin';if(n<1e9)return(n/1e6).toFixed(2)+' Milyon';return(n/1e9).toFixed(2)+' Milyar';}
   function getEmpireBagPower(){return empireState.upgrades.bag.tier*empireState.upgrades.bag.powerPerTier;}
   function getEmpireBirdPower(){return empireState.upgrades.bird.tier*empireState.upgrades.bird.powerPerTier;}
@@ -2816,7 +2816,7 @@
   setInterval(()=>saveEmpireLocal(),3000);
   function saveEmpireToFirebase(){if(!myPhone||!socket.connected){showEmpireToast('❌ Sunucu bağlantısı yok!');return;}saveEmpireLocal();let b=document.getElementById('empire-save-btn');b.disabled=true;b.innerText='⏳ Kaydediliyor...';socket.emit('save empire game',{state:empireState});}
   socket.on('empire game saved',d=>{let b=document.getElementById('empire-save-btn');b.disabled=false;b.innerText='💾 Kaydet';showEmpireToast(d&&d.success?'✅ Firebase\'e kaydedildi!':'❌ Kayıt başarısız!');});
-  function openEmpireGame(){empireGameActive=true;stopGameLoop();document.querySelector('.game-card').classList.add('empire-mode');document.getElementById('game-header-title').innerText='👑🕊️ Güvercin İmparatorluğu';document.getElementById('game-menu-screen').style.display='none';document.getElementById('game-play-screen').style.display='none';document.getElementById('empire-play-screen').style.display='flex';updateEmpireUI();}
+  function openEmpireGame(){empireGameActive=true;stopGameLoop();document.querySelector('.game-card').classList.add('empire-mode');document.getElementById('game-header-title').innerText='👑 Güvercin İmparatorluğu';document.getElementById('game-menu-screen').style.display='none';document.getElementById('game-play-screen').style.display='none';document.getElementById('empire-play-screen').style.display='flex';updateEmpireUI();}
   function selectGame(t){if(t==='flappy'){document.querySelector('.game-card').classList.remove('empire-mode');document.getElementById('game-header-title').innerText='🕊️ Güvercin Uçur';document.getElementById('game-menu-screen').style.display='none';document.getElementById('game-play-screen').style.display='flex';document.getElementById('empire-play-screen').style.display='none';document.getElementById('game-highscore').innerText=myHighScore;resetGame();}else if(t==='empire'){openEmpireGame();}}
   function showGameMenu(){empireGameActive=false;stopGameLoop();document.querySelector('.game-card').classList.remove('empire-mode');document.getElementById('game-header-title').innerText='🎮 Oyun Salonu';document.getElementById('game-menu-screen').style.display='flex';document.getElementById('game-play-screen').style.display='none';document.getElementById('empire-play-screen').style.display='none';document.getElementById('menu-highscore').innerText=myHighScore;updateEmpireUI();}
   loadEmpireLocal();updateEmpireUI();
@@ -2835,7 +2835,7 @@
   // Hız ve Zamanlama Değişkenleri
   let lastTime = 0;
   let accumulator = 0;
-  const timeStep = 1000 / 60; // Tam 60 FPS (16.66ms)
+  const timeStep = 1000 / 90; // Tam 60 FPS (16.66ms)
 
   // Fizik Ayarları
   let bird = {
