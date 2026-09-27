@@ -4,25 +4,30 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-  <title>Güvercin Messenger & Oyun Salonu</title>
+  <title>Güvercin Messenger</title>
 
   <style>
     * {
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
-      user-select: none;
     }
 
-    html, body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    html,
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, Helvetica, Arial, sans-serif;
+
       background: #00a884;
       margin: 0;
       padding: 0;
+
       height: 100vh;
       height: 100dvh;
+
       display: flex;
       justify-content: center;
       align-items: center;
+
       overflow: hidden;
     }
 
@@ -30,364 +35,848 @@
       position: relative;
       width: 100%;
       height: 100%;
+
       background: #efeae2;
+
       display: flex;
       overflow: hidden;
     }
 
     @media (min-width: 769px) {
-      body { background: #d1d7db; }
+      body {
+        background: #d1d7db;
+      }
+
       .app-container {
         max-width: 950px;
         height: 90vh;
+
         border-radius: 12px;
+
         box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
       }
-      .back-btn { display: none !important; }
+
+      .back-btn {
+        display: none !important;
+      }
     }
 
     /* =========================
-       GİRİŞ EKRANI
+       GİRİŞ
     ========================= */
+
     .login-overlay {
       position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
+
+      top: 0;
+      left: 0;
+
+      width: 100%;
+      height: 100%;
+
       background: #f0f2f5;
-      display: flex; justify-content: center; align-items: center;
-      z-index: 100; padding: 20px;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      z-index: 100;
+
+      padding: 20px;
     }
 
     .login-card {
       background: white;
-      width: 100%; max-width: 360px;
+
+      width: 100%;
+      max-width: 360px;
+
       padding: 30px 24px;
+
       border-radius: 16px;
+
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+
       text-align: center;
     }
 
     .login-avatar {
-      width: 70px; height: 70px;
+      width: 70px;
+      height: 70px;
+
       background: #e8f5e9;
+
       border-radius: 50%;
-      display: flex; justify-content: center; align-items: center;
-      font-size: 34px; margin: 0 auto 15px auto;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      font-size: 34px;
+
+      margin: 0 auto 15px auto;
     }
 
-    .login-title { font-size: 20px; color: #111b21; font-weight: 600; margin-bottom: 6px; }
-    .login-desc { font-size: 13px; color: #667781; margin-bottom: 22px; line-height: 1.4; }
-    .input-group { margin-bottom: 15px; text-align: left; }
+    .login-title {
+      font-size: 20px;
+      color: #111b21;
+
+      font-weight: 600;
+
+      margin-bottom: 6px;
+    }
+
+    .login-desc {
+      font-size: 13px;
+      color: #667781;
+
+      margin-bottom: 22px;
+
+      line-height: 1.4;
+    }
+
+    .input-group {
+      margin-bottom: 15px;
+      text-align: left;
+    }
 
     label {
-      display: block; margin-bottom: 6px; font-size: 11px;
-      color: #00a884; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+      display: block;
+
+      margin-bottom: 6px;
+
+      font-size: 11px;
+
+      color: #00a884;
+
+      font-weight: 700;
+
+      text-transform: uppercase;
+
+      letter-spacing: 0.5px;
     }
 
     .login-card input {
-      width: 100%; padding: 12px 14px;
-      border: 1.5px solid #e0e0e0; border-radius: 8px;
-      font-size: 16px; outline: none; user-select: text;
+      width: 100%;
+
+      padding: 12px 14px;
+
+      border: 1.5px solid #e0e0e0;
+
+      border-radius: 8px;
+
+      font-size: 16px;
+
+      outline: none;
     }
-    .login-card input:focus { border-color: #00a884; }
+
+    .login-card input:focus {
+      border-color: #00a884;
+    }
 
     .login-card button {
-      width: 100%; padding: 14px; background: #00a884; color: white;
-      border: none; border-radius: 8px; font-weight: 600; font-size: 16px;
-      cursor: pointer; margin-top: 5px;
+      width: 100%;
+
+      padding: 14px;
+
+      background: #00a884;
+
+      color: white;
+
+      border: none;
+
+      border-radius: 8px;
+
+      font-weight: 600;
+
+      font-size: 16px;
+
+      cursor: pointer;
+
+      margin-top: 5px;
     }
 
-    .location-status { margin-top: 14px; font-size: 12px; color: #667781; line-height: 1.4; }
+    .location-status {
+      margin-top: 14px;
+
+      font-size: 12px;
+
+      color: #667781;
+
+      line-height: 1.4;
+    }
 
     /* =========================
        SOL PANEL
     ========================= */
+
     .sidebar {
-      width: 320px; background: #ffffff;
-      border-right: 1px solid #e0e0e0; display: flex; flex-direction: column;
+      width: 320px;
+
+      background: #ffffff;
+
+      border-right: 1px solid #e0e0e0;
+
+      display: flex;
+      flex-direction: column;
     }
 
     .sidebar-header {
-      background: #008069; color: white; padding: 14px 16px;
-      font-weight: bold; font-size: 16px; display: flex;
-      justify-content: space-between; align-items: center;
+      background: #008069;
+
+      color: white;
+
+      padding: 14px 16px;
+
+      font-weight: bold;
+
+      font-size: 16px;
+
+      display: flex;
+
+      justify-content: space-between;
+
+      align-items: center;
     }
 
     .profile-name-box {
-      padding: 10px; background: #e7f5f0;
-      border-bottom: 1px solid #c2e5d9; display: flex; gap: 8px; align-items: center;
+      padding: 10px;
+
+      background: #e7f5f0;
+
+      border-bottom: 1px solid #c2e5d9;
+
+      display: flex;
+
+      gap: 8px;
+
+      align-items: center;
     }
 
     .profile-name-box input {
-      flex: 1; padding: 8px 10px; border: 1px solid #00a884;
-      border-radius: 6px; font-size: 13px; outline: none; user-select: text;
+      flex: 1;
+
+      padding: 8px 10px;
+
+      border: 1px solid #00a884;
+
+      border-radius: 6px;
+
+      font-size: 13px;
+
+      outline: none;
     }
 
     .profile-name-box button {
-      background: #008069; color: white; border: none;
-      border-radius: 6px; font-weight: bold; padding: 8px 12px; font-size: 12px; cursor: pointer;
+      background: #008069;
+
+      color: white;
+
+      border: none;
+
+      border-radius: 6px;
+
+      font-weight: bold;
+
+      padding: 8px 12px;
+
+      font-size: 12px;
+
+      cursor: pointer;
     }
 
+    /* ŞİFRE DEĞİŞTİRME VE OYUN KUTUSU */
     .profile-password-box {
-      padding: 10px; background: #f4faf8;
-      border-bottom: 1px solid #c2e5d9; display: flex; flex-direction: column; gap: 6px;
+      padding: 10px;
+
+      background: #f4faf8;
+
+      border-bottom: 1px solid #c2e5d9;
+
+      display: flex;
+
+      flex-direction: column;
+
+      gap: 6px;
     }
 
     .btn-action-side {
-      background: #008069; color: white; border: none;
-      border-radius: 6px; font-weight: bold; padding: 9px 12px; font-size: 13px; cursor: pointer; width: 100%;
+      background: #008069;
+
+      color: white;
+
+      border: none;
+
+      border-radius: 6px;
+
+      font-weight: bold;
+
+      padding: 9px 12px;
+
+      font-size: 13px;
+
+      cursor: pointer;
+
+      width: 100%;
     }
 
-    .btn-game-side { background: #25d366; }
+    .btn-game-side {
+      background: #25d366;
+    }
 
     .add-contact-box {
-      padding: 10px; background: #f0f2f5;
-      border-bottom: 1px solid #e0e0e0; display: flex; gap: 8px;
+      padding: 10px;
+
+      background: #f0f2f5;
+
+      border-bottom: 1px solid #e0e0e0;
+
+      display: flex;
+
+      gap: 8px;
     }
 
     .add-contact-box input {
-      flex: 1; padding: 10px 12px; border: 1px solid #ccc;
-      border-radius: 8px; font-size: 14px; outline: none; user-select: text;
+      flex: 1;
+
+      padding: 10px 12px;
+
+      border: 1px solid #ccc;
+
+      border-radius: 8px;
+
+      font-size: 14px;
+
+      outline: none;
     }
 
     .add-contact-box button {
-      background: #00a884; color: white; border: none;
-      border-radius: 8px; font-weight: bold; padding: 0 16px; font-size: 18px; cursor: pointer;
+      background: #00a884;
+
+      color: white;
+
+      border: none;
+
+      border-radius: 8px;
+
+      font-weight: bold;
+
+      padding: 0 16px;
+
+      font-size: 18px;
+
+      cursor: pointer;
     }
 
-    .contact-list { flex: 1; overflow-y: auto; }
-    .contact-item { padding: 14px 16px; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
-    .contact-item:active { background: #e9edef; }
-    .contact-item.active { background: #f0f2f5; font-weight: bold; }
-    .contact-name { font-size: 15px; color: #111b21; font-weight: 600; }
-    .contact-phone { font-size: 12px; color: #667781; }
+    .contact-list {
+      flex: 1;
+
+      overflow-y: auto;
+    }
+
+    .contact-item {
+      padding: 14px 16px;
+
+      border-bottom: 1px solid #f0f0f0;
+
+      cursor: pointer;
+    }
+
+    .contact-item:active {
+      background: #e9edef;
+    }
+
+    .contact-item.active {
+      background: #f0f2f5;
+
+      font-weight: bold;
+    }
+
+    .contact-name {
+      font-size: 15px;
+
+      color: #111b21;
+
+      font-weight: 600;
+    }
+
+    .contact-phone {
+      font-size: 12px;
+
+      color: #667781;
+    }
+
     .contact-last-msg {
-      font-size: 13px; color: #667781; margin-top: 3px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      font-size: 13px;
+
+      color: #667781;
+
+      margin-top: 3px;
+
+      white-space: nowrap;
+
+      overflow: hidden;
+
+      text-overflow: ellipsis;
     }
 
     /* =========================
-       SOHBET ALANI
+       SOHBET
     ========================= */
-    .chat-area { flex: 1; display: flex; flex-direction: column; background: #efeae2; }
 
-    .chat-header {
-      background: #f0f2f5; padding: 10px 14px; border-bottom: 1px solid #e0e0e0;
-      display: flex; align-items: center; gap: 10px; height: 60px;
+    .chat-area {
+      flex: 1;
+
+      display: flex;
+
+      flex-direction: column;
+
+      background: #efeae2;
     }
 
-    .back-btn { font-size: 22px; cursor: pointer; padding: 4px 8px; color: #00a884; font-weight: bold; }
-    .chat-header-title { font-weight: bold; color: #111b21; font-size: 16px; }
-    .chat-header-sub { font-size: 12px; color: #667781; }
+    .chat-header {
+      background: #f0f2f5;
+
+      padding: 10px 14px;
+
+      border-bottom: 1px solid #e0e0e0;
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 10px;
+
+      height: 60px;
+    }
+
+    .back-btn {
+      font-size: 22px;
+
+      cursor: pointer;
+
+      padding: 4px 8px;
+
+      color: #00a884;
+
+      font-weight: bold;
+    }
+
+    .chat-header-title {
+      font-weight: bold;
+
+      color: #111b21;
+
+      font-size: 16px;
+    }
+
+    .chat-header-sub {
+      font-size: 12px;
+
+      color: #667781;
+    }
 
     .chat-body {
-      flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px;
+      flex: 1;
+
+      overflow-y: auto;
+
+      padding: 15px;
+
+      display: flex;
+
+      flex-direction: column;
+
+      gap: 10px;
     }
 
     .msg-bubble {
-      max-width: 80%; padding: 8px 12px; border-radius: 8px;
-      font-size: 15px; word-wrap: break-word; box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1); user-select: text;
+      max-width: 80%;
+
+      padding: 8px 12px;
+
+      border-radius: 8px;
+
+      font-size: 15px;
+
+      word-wrap: break-word;
+
+      box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
     }
 
-    .msg-sender-name { font-size: 11px; font-weight: bold; color: #008069; margin-bottom: 3px; }
-    .msg-outgoing { background: #dcf8c6; align-self: flex-end; border-top-right-radius: 0; }
-    .msg-incoming { background: #ffffff; align-self: flex-start; border-top-left-radius: 0; }
-    .msg-info { font-size: 11px; color: #666; margin-top: 4px; text-align: right; display: flex; justify-content: flex-end; gap: 4px; }
+    .msg-sender-name {
+      font-size: 11px;
+      font-weight: bold;
+      color: #008069;
+      margin-bottom: 3px;
+    }
+
+    .msg-outgoing {
+      background: #dcf8c6;
+
+      align-self: flex-end;
+
+      border-top-right-radius: 0;
+    }
+
+    .msg-incoming {
+      background: #ffffff;
+
+      align-self: flex-start;
+
+      border-top-left-radius: 0;
+    }
+
+    .msg-info {
+      font-size: 11px;
+
+      color: #666;
+
+      margin-top: 4px;
+
+      text-align: right;
+
+      display: flex;
+
+      justify-content: flex-end;
+
+      gap: 4px;
+    }
 
     .system-banner {
-      background: #fff3cd; color: #856404; padding: 10px;
-      border-radius: 8px; font-size: 13px; text-align: center; border: 1px solid #ffeeba; margin-bottom: 10px;
+      background: #fff3cd;
+
+      color: #856404;
+
+      padding: 10px;
+
+      border-radius: 8px;
+
+      font-size: 13px;
+
+      text-align: center;
+
+      border: 1px solid #ffeeba;
+
+      margin-bottom: 10px;
     }
 
-    .chat-footer { background: #f0f2f5; padding: 8px 10px; display: flex; gap: 8px; align-items: center; }
+    .chat-footer {
+      background: #f0f2f5;
+
+      padding: 8px 10px;
+
+      display: flex;
+
+      gap: 8px;
+
+      align-items: center;
+    }
+
     .chat-footer input {
-      flex: 1; border-radius: 20px; border: none; padding: 12px 16px;
-      font-size: 15px; outline: none; user-select: text;
+      flex: 1;
+
+      border-radius: 20px;
+
+      border: none;
+
+      padding: 12px 16px;
+
+      font-size: 15px;
+
+      outline: none;
     }
 
     .chat-footer button {
-      width: 44px; height: 44px; border-radius: 50%; background: #00a884;
-      color: white; border: none; font-size: 18px; display: flex; justify-content: center; align-items: center; flex-shrink: 0; cursor: pointer;
+      width: 44px;
+      height: 44px;
+
+      border-radius: 50%;
+
+      background: #00a884;
+
+      color: white;
+
+      border: none;
+
+      font-size: 18px;
+
+      display: flex;
+
+      justify-content: center;
+
+      align-items: center;
+
+      flex-shrink: 0;
+
+      cursor: pointer;
     }
-    .chat-footer button:disabled { background: #a5d6a7; cursor: not-allowed; }
+
+    .chat-footer button:disabled {
+      background: #a5d6a7;
+
+      cursor: not-allowed;
+    }
 
     .empty-state {
-      display: flex; flex: 1; justify-content: center; align-items: center;
-      color: #667781; font-size: 15px; text-align: center; padding: 20px;
+      display: flex;
+
+      flex: 1;
+
+      justify-content: center;
+
+      align-items: center;
+
+      color: #667781;
+
+      font-size: 15px;
+
+      text-align: center;
+
+      padding: 20px;
     }
 
     /* =========================
        OYUN MODALI & MENÜSÜ
     ========================= */
+
     .game-modal {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.65); display: flex; justify-content: center; align-items: center;
-      z-index: 200; padding: 15px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.65);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 200;
+      padding: 15px;
     }
 
     .game-card {
-      background: #ffffff; width: 100%; max-width: 380px; height: 530px;
-      border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-      display: flex; flex-direction: column;
+      background: #ffffff;
+      width: 100%;
+      max-width: 360px;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
     }
 
     .game-header {
-      width: 100%; background: #008069; color: white; padding: 12px 16px;
-      display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 15px;
+      width: 100%;
+      background: #008069;
+      color: white;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: bold;
+      font-size: 15px;
     }
 
-    .close-game { cursor: pointer; font-size: 22px; line-height: 1; }
+    .close-game {
+      cursor: pointer;
+      font-size: 22px;
+      line-height: 1;
+    }
 
+    /* OYUNLAR MENÜSÜ EKRANI */
     .game-menu-screen {
-      padding: 16px; display: flex; flex-direction: column; gap: 12px;
-      background: #f0f2f5; flex: 1; overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: #f0f2f5;
     }
 
     .game-menu-title {
-      font-size: 13px; font-weight: bold; color: #667781;
-      text-transform: uppercase; letter-spacing: 0.5px;
+      font-size: 13px;
+      font-weight: bold;
+      color: #667781;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
-    .game-selection-list { display: flex; flex-direction: column; gap: 10px; }
+    .game-selection-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
 
     .game-item-card {
-      background: white; border: 1px solid #e0e0e0; border-radius: 12px;
-      padding: 12px; display: flex; align-items: center; gap: 12px; transition: transform 0.1s ease;
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: transform 0.1s ease;
     }
 
-    .game-item-card:hover { border-color: #00a884; }
+    .game-item-card:hover {
+      border-color: #00a884;
+    }
 
     .game-item-icon {
-      width: 48px; height: 48px; background: #e8f5e9; border-radius: 10px;
-      display: flex; justify-content: center; align-items: center; font-size: 26px; flex-shrink: 0;
+      width: 48px;
+      height: 48px;
+      background: #e8f5e9;
+      border-radius: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 26px;
+      flex-shrink: 0;
     }
 
-    .game-item-info { flex: 1; }
-    .game-item-name { font-size: 14px; font-weight: bold; color: #111b21; }
-    .game-item-desc { font-size: 11px; color: #667781; margin-top: 2px; }
-    .game-item-score { font-size: 11px; color: #008069; font-weight: bold; margin-top: 4px; }
+    .game-item-info {
+      flex: 1;
+    }
+
+    .game-item-name {
+      font-size: 14px;
+      font-weight: bold;
+      color: #111b21;
+    }
+
+    .game-item-desc {
+      font-size: 11px;
+      color: #667781;
+      margin-top: 2px;
+    }
+
+    .game-item-score {
+      font-size: 11px;
+      color: #008069;
+      font-weight: bold;
+      margin-top: 4px;
+    }
 
     .btn-play-game {
-      background: #00a884; color: white; border: none; padding: 8px 14px;
-      border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer;
+      background: #00a884;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 12px;
+      cursor: pointer;
     }
 
     /* FLAPPY BIRD EKRANI */
-    .game-play-screen { display: flex; flex-direction: column; align-items: center; flex: 1; }
+    .game-play-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
 
     .game-score-bar {
-      width: 100%; background: #f0f2f5; padding: 8px 12px;
-      display: flex; justify-content: space-between; align-items: center;
-      font-size: 13px; color: #111b21; border-bottom: 1px solid #e0e0e0;
+      width: 100%;
+      background: #f0f2f5;
+      padding: 8px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      color: #111b21;
+      border-bottom: 1px solid #e0e0e0;
     }
 
     .btn-back-menu {
-      background: #e0e0e0; color: #333; border: none; padding: 4px 10px;
-      border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer;
+      background: #e0e0e0;
+      color: #333;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
     }
 
     .canvas-container {
-      position: relative; width: 100%; flex: 1; background: #70c5ce;
-      user-select: none; touch-action: none; display: flex; justify-content: center; align-items: center;
+      position: relative;
+      width: 320px;
+      height: 400px;
+      background: #70c5ce;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
     }
 
-    canvas { display: block; width: 320px; height: 400px; cursor: pointer; touch-action: none; }
+    canvas {
+      display: block;
+      width: 320px;
+      height: 400px;
+      cursor: pointer;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
 
     .game-screen-overlay {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column;
-      justify-content: center; align-items: center; color: white; text-align: center; padding: 20px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.45);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      text-align: center;
+      padding: 20px;
     }
 
-    .game-screen-overlay h3 { margin: 0 0 10px 0; font-size: 22px; }
-    .game-screen-overlay p { font-size: 13px; margin-bottom: 15px; line-height: 1.4; }
+    .game-screen-overlay h3 {
+      margin: 0 0 10px 0;
+      font-size: 22px;
+    }
+
+    .game-screen-overlay p {
+      font-size: 13px;
+      margin-bottom: 15px;
+      line-height: 1.4;
+    }
+
     .game-screen-overlay button {
-      background: #00a884; color: white; border: none; padding: 10px 20px;
-      border-radius: 20px; font-weight: bold; font-size: 14px; cursor: pointer;
+      background: #00a884;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
     }
 
     /* =========================
-       GÜVERCİN İMPARATORLUĞU (CLICKER)
+       MOBİL
     ========================= */
-    .clicker-screen {
-      display: flex; flex-direction: column; flex: 1; background: #0b141a; color: #e9edef; overflow: hidden;
-    }
-
-    .clicker-header {
-      background: #1f2c34; padding: 10px; border-bottom: 2px solid #00a884;
-    }
-
-    .clicker-stats-row {
-      display: flex; justify-content: space-between; align-items: center; font-size: 12px;
-    }
-
-    .clicker-money { font-size: 24px; font-weight: 800; color: #25d366; text-align: center; margin: 4px 0; }
-    .clicker-sub { font-size: 11px; color: #8696a0; text-align: center; }
-
-    .clicker-level-bar {
-      margin-top: 6px; background: #111b21; border-radius: 8px; padding: 3px 6px;
-      display: flex; align-items: center; gap: 6px;
-    }
-
-    .clicker-badge { background: #00a884; color: white; font-weight: bold; font-size: 10px; padding: 2px 5px; border-radius: 4px; }
-    .clicker-bar-bg { flex: 1; height: 6px; background: #2a3942; border-radius: 3px; overflow: hidden; }
-    .clicker-bar-fill { height: 100%; width: 0%; background: #25d366; transition: width 0.2s ease; }
-
-    .clicker-action-area {
-      height: 150px; display: flex; flex-direction: column; justify-content: center; align-items: center;
-      position: relative; background: radial-gradient(circle, #1f2c34 0%, #0b141a 70%); cursor: pointer;
-    }
-
-    .clicker-pigeon {
-      font-size: 70px; transition: transform 0.08s ease; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.4));
-    }
-    .clicker-pigeon:active { transform: scale(0.85); }
-
-    .clicker-floating {
-      position: absolute; font-weight: bold; font-size: 18px; color: #25d366;
-      pointer-events: none; animation: floatClick 0.7s ease-out forwards; text-shadow: 0 2px 4px rgba(0,0,0,0.8); z-index: 10;
-    }
-
-    @keyframes floatClick {
-      0% { opacity: 1; transform: translateY(0) scale(1); }
-      100% { opacity: 0; transform: translateY(-40px) scale(1.2); }
-    }
-
-    .clicker-upgrades {
-      flex: 1; background: #111b21; border-top: 1px solid #2a3942;
-      padding: 8px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;
-    }
-
-    .clicker-card {
-      background: #1f2c34; border: 1px solid #2a3942; border-radius: 8px; padding: 8px;
-      display: flex; flex-direction: column; gap: 6px;
-    }
-
-    .clicker-card-top { display: flex; align-items: center; gap: 8px; }
-    .clicker-card-icon { font-size: 22px; width: 36px; height: 36px; background: #111b21; border-radius: 6px; display: flex; justify-content: center; align-items: center; }
-    .clicker-card-info { flex: 1; }
-    .clicker-card-title { font-size: 12px; font-weight: bold; color: #e9edef; display: flex; justify-content: space-between; }
-    .clicker-card-desc { font-size: 10px; color: #8696a0; margin-top: 1px; }
-
-    .clicker-card-btns { display: flex; gap: 6px; }
-    .clicker-btn {
-      flex: 1; border: none; padding: 6px; border-radius: 6px; font-size: 10px; font-weight: bold;
-      cursor: pointer; display: flex; flex-direction: column; align-items: center; background: #2a3942; color: #8696a0;
-    }
-    .clicker-btn.can-afford-buy { background: #00a884; color: white; }
-    .clicker-btn.can-afford-up { background: #f39c12; color: #111b21; }
-
-    .clicker-toast {
-      position: absolute; top: 50px; left: 50%; transform: translateX(-50%);
-      background: #00a884; color: white; padding: 6px 14px; border-radius: 12px;
-      font-size: 11px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 150; display: none;
-    }
 
     @media (max-width: 768px) {
-      .sidebar { width: 100%; }
-      .chat-area { width: 100%; display: none; }
-      .app-container.show-chat .sidebar { display: none; }
-      .app-container.show-chat .chat-area { display: flex; }
+      .sidebar {
+        width: 100%;
+      }
+
+      .chat-area {
+        width: 100%;
+
+        display: none;
+      }
+
+      .app-container.show-chat .sidebar {
+        display: none;
+      }
+
+      .app-container.show-chat .chat-area {
+        display: flex;
+      }
     }
   </style>
 </head>
@@ -396,86 +885,235 @@
 
 <div id="app-container" class="app-container">
 
-  <!-- ========================= GİRİŞ EKRANI ========================= -->
+  <!-- =========================
+       GİRİŞ EKRANI
+  ========================= -->
+
   <div id="login-overlay" class="login-overlay">
+
     <div class="login-card">
+
       <div class="login-avatar">🕊️</div>
-      <div class="login-title">Güvercin Messenger</div>
+
+      <div class="login-title">
+        Güvercin Messenger
+      </div>
+
       <div class="login-desc">
-        Giriş yapmak veya kayıt olmak için telefon numaranızı ve şifrenizi girin. Ayrıca bu dünyada geçici olduğunuzu aklınızdan çıkarmayın.
-        <br><b>🇹🇷 Muhammed Fatih Uğurlu 🇹🇷</b>
+        Giriş yapmak veya kayıt olmak için telefon numaranızı ve şifrenizi girin. Ayrıca bu dünyanın geçici olduğunu aklınızdan çıkarmayın, çıkarttırmayın.  
+        🇹🇷Muhammed Fatih Uğurlu🇹🇷
       </div>
 
       <div class="input-group">
-        <label>Telefon Numarası</label>
-        <input id="my-phone" type="tel" placeholder="05XXXXXXXXX" maxlength="11" autocomplete="tel" />
+
+        <label>
+          Telefon Numarası
+        </label>
+
+        <input
+          id="my-phone"
+          type="tel"
+          placeholder="05XXXXXXXXX"
+          maxlength="11"
+          autocomplete="tel"
+        />
+
       </div>
 
+      <!-- ŞİFRE ALANI -->
       <div class="input-group">
-        <label>Şifre (4-12 Karakter)</label>
-        <input id="my-password" type="password" placeholder="Şifrenizi Girin" minlength="4" maxlength="12" />
+
+        <label>
+          Şifre (4-12 Karakter)
+        </label>
+
+        <input
+          id="my-password"
+          type="password"
+          placeholder="Şifrenizi Girin"
+          minlength="4"
+          maxlength="12"
+        />
+
       </div>
 
-      <button id="login-button" onclick="login()">Giriş Yap / Kayıt Ol</button>
+      <button
+        id="login-button"
+        onclick="login()"
+      >
+        Giriş Yap / Kayıt Ol
+      </button>
 
-      <div id="location-status" class="location-status">
-        🇹🇷 Muhammed Fatih Uğurlu 🇹🇷
+      <div
+        id="location-status"
+        class="location-status"
+      >
+         🇹🇷 Muhammed Fatih Uğurlu 🇹🇷
       </div>
+
     </div>
+
   </div>
 
 
-  <!-- ========================= SOL PANEL ========================= -->
+  <!-- =========================
+       SOL PANEL
+  ========================= -->
+
   <div class="sidebar">
+
     <div class="sidebar-header">
-      <span>🕊️ Güvercin - M. Fatih Uğurlu</span>
-      <span id="my-phone-display" style="font-size:12px; opacity:0.9;"></span>
+
+      <span>
+        🕊️ Güvercin - Muhammed Fatih Uğurlu
+      </span>
+
+      <span
+        id="my-phone-display"
+        style="font-size:12px; opacity:0.9;"
+      ></span>
+
     </div>
 
+    <!-- İSİM BELİRLEME KUTUSU -->
     <div class="profile-name-box">
-      <input id="my-name-input" type="text" placeholder="Kullanıcı Adınızı Girin..." maxlength="25" />
-      <button onclick="saveMyName()">Kaydet</button>
+
+      <input
+        id="my-name-input"
+        type="text"
+        placeholder="Kullanıcı Adınızı Girin..."
+        maxlength="25"
+      />
+
+      <button onclick="saveMyName()">
+        Kaydet
+      </button>
+
     </div>
 
+    <!-- ŞİFRE DEĞİŞTİRME VE OYUN OYNA BUTONLARI -->
     <div class="profile-password-box">
-      <button class="btn-action-side" onclick="changePassword()">🔒 Şifreyi Değiştir</button>
-      <button class="btn-action-side btn-game-side" onclick="openGameModal()">🎮 Oyun Salonu</button>
+
+      <button class="btn-action-side" onclick="changePassword()">
+        🔒 Şifreyi Değiştir
+      </button>
+
+      <button class="btn-action-side btn-game-side" onclick="openGameModal()">
+        🎮 Oyun Oyna
+      </button>
+
     </div>
+
 
     <div class="add-contact-box">
-      <input id="new-contact-phone" type="tel" placeholder="Kişi ekle (05XXXXXXXXX)" maxlength="11" />
-      <button onclick="addNewContact()">+</button>
+
+      <input
+        id="new-contact-phone"
+        type="tel"
+        placeholder="Kişi ekle (05XXXXXXXXX)"
+        maxlength="11"
+      />
+
+      <button onclick="addNewContact()">
+        +
+      </button>
+
     </div>
 
-    <div id="contact-list" class="contact-list"></div>
+
+    <div
+      id="contact-list"
+      class="contact-list"
+    ></div>
+
   </div>
 
 
-  <!-- ========================= SOHBET ALANI ========================= -->
+  <!-- =========================
+       SOHBET ALANI
+  ========================= -->
+
   <div class="chat-area">
+
     <div class="chat-header">
-      <div class="back-btn" onclick="backToContacts()">←</div>
-      <div>
-        <div id="active-contact-title" class="chat-header-title">Sohbet Seçin</div>
-        <div id="active-contact-sub" class="chat-header-sub">Sol taraftan bir numara seçin</div>
+
+      <div
+        class="back-btn"
+        onclick="backToContacts()"
+      >
+        ←
       </div>
+
+      <div>
+
+        <div
+          id="active-contact-title"
+          class="chat-header-title"
+        >
+          Sohbet Seçin
+        </div>
+
+        <div
+          id="active-contact-sub"
+          class="chat-header-sub"
+        >
+          Sol taraftan bir numara seçin
+        </div>
+
+      </div>
+
     </div>
 
-    <div id="chat-body" class="chat-body">
-      <div id="system-banner" class="system-banner" style="display:none;"></div>
-      <div id="empty-state" class="empty-state">Mesajlaşmak için bir sohbet seçin</div>
+
+    <div
+      id="chat-body"
+      class="chat-body"
+    >
+
+      <div
+        id="system-banner"
+        class="system-banner"
+        style="display:none;"
+      ></div>
+
+      <div
+        id="empty-state"
+        class="empty-state"
+      >
+        Mesajlaşmak için bir sohbet seçin
+      </div>
+
     </div>
+
 
     <div class="chat-footer">
-      <input id="message-text" placeholder="Bir mesaj yazın..." onkeypress="handleKeyPress(event)" disabled />
-      <button id="send-btn" onclick="sendPigeon()" disabled>🕊️</button>
+
+      <input
+        id="message-text"
+        placeholder="Bir mesaj yazın..."
+        onkeypress="handleKeyPress(event)"
+        disabled
+      />
+
+      <button
+        id="send-btn"
+        onclick="sendPigeon()"
+        disabled
+      >
+        🕊️
+      </button>
+
     </div>
+
   </div>
 
 </div>
 
 
-<!-- ========================= OYUN SALONU MODALI ========================= -->
+<!-- =========================
+     OYUN SALONU MODALI
+========================= -->
+
 <div id="game-modal" class="game-modal" style="display: none;">
   <div class="game-card">
 
@@ -484,38 +1122,24 @@
       <span class="close-game" onclick="closeGameModal()">✕</span>
     </div>
 
-    <!-- 1. MENÜ EKRANI -->
+    <!-- 1. EKRAN: OYUN SEÇİM MENÜSÜ -->
     <div id="game-menu-screen" class="game-menu-screen">
       <div class="game-menu-title">Oynanabilir Oyunlar</div>
 
       <div class="game-selection-list">
-
-        <!-- OYUN 1: FLAPPY BIRD -->
         <div class="game-item-card">
           <div class="game-item-icon">🕊️</div>
           <div class="game-item-info">
-            <div class="game-item-name">Güvercin Uçur (Flappy)</div>
+            <div class="game-item-name">Güvercin Uçur (Flappy Bird)</div>
             <div class="game-item-desc">Engellere takılmadan en yüksek skoru yap!</div>
             <div class="game-item-score">En Yüksek Rekor: <span id="menu-highscore">0</span></div>
           </div>
           <button class="btn-play-game" onclick="selectGame('flappy')">Oyna</button>
         </div>
-
-        <!-- OYUN 2: GÜVERCİN İMPARATORLUĞU (CLICKER) -->
-        <div class="game-item-card">
-          <div class="game-item-icon">👑</div>
-          <div class="game-item-info">
-            <div class="game-item-name">Güvercin İmparatorluğu</div>
-            <div class="game-item-desc">Dokun, para kazan, güvercin ordunu büyüt!</div>
-            <div class="game-item-score">Kazanılan: <span id="clicker-total-menu">0 ₺</span></div>
-          </div>
-          <button class="btn-play-game" style="background:#25d366;" onclick="selectGame('clicker')">Oyna</button>
-        </div>
-
       </div>
     </div>
 
-    <!-- 2. FLAPPY BIRD OYUN EKRANI -->
+    <!-- 2. EKRAN: FLAPPY BIRD OYUN ALANI -->
     <div id="game-play-screen" class="game-play-screen" style="display: none;">
       <div class="game-score-bar">
         <button class="btn-back-menu" onclick="showGameMenu()">◀ Menü</button>
@@ -525,44 +1149,12 @@
 
       <div class="canvas-container">
         <canvas id="flappy-canvas" width="320" height="400"></canvas>
+
         <div id="game-start-screen" class="game-screen-overlay">
           <h3>🕊️ Güvercin Uçur</h3>
           <p>Ekrana Tıkla veya Boşluk Tuşuna Basarak Güvercini Havada Tut!</p>
           <button onclick="startGame()">Başla</button>
         </div>
-      </div>
-    </div>
-
-    <!-- 3. GÜVERCİN İMPARATORLUĞU (CLICKER) OYUN EKRANI -->
-    <div id="clicker-play-screen" class="clicker-screen" style="display: none;">
-      <div id="clicker-toast" class="clicker-toast">Mesaj</div>
-
-      <div class="clicker-header">
-        <div class="clicker-stats-row">
-          <button class="btn-back-menu" onclick="showGameMenu()">◀ Menü</button>
-          <span>Toplam: <b id="clicker-total-earned" style="color:#25d366;">0 ₺</b></span>
-          <button id="clicker-sound-btn" class="btn-back-menu" onclick="toggleClickerSound()">🔊</button>
-        </div>
-
-        <div class="clicker-money" id="clicker-money-text">0 ₺</div>
-        <div class="clicker-sub">
-          Tıklama: <b id="clicker-power-text" style="color:#fff;">1 ₺</b> | Saniye Başı: <b id="clicker-cps-text" style="color:#fff;">0 ₺/sn</b>
-        </div>
-
-        <div class="clicker-level-bar">
-          <span class="clicker-badge" id="clicker-level-badge">Seviye 1</span>
-          <div class="clicker-bar-bg">
-            <div class="clicker-bar-fill" id="clicker-level-fill"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="clicker-action-area" id="clicker-click-area">
-        <div class="clicker-pigeon" id="clicker-pigeon-btn">🕊️</div>
-      </div>
-
-      <div class="clicker-upgrades" id="clicker-upgrades-container">
-        <!-- Dinamik Yükseltmeler -->
       </div>
     </div>
 
@@ -573,56 +1165,116 @@
 <script src="/socket.io/socket.io.js"></script>
 
 <script>
-  /* ==========================================
-     DEĞİŞKENLER VE SOKET KURULUMU
-  ========================================== */
-  const socket = typeof io !== 'undefined' ? io() : { on:()=>{}, emit:()=>{} };
+
+  /* =========================
+     SOCKET
+  ========================= */
+
+  const socket = io();
+
+
+  /* =========================
+     DEĞİŞKENLER
+  ========================= */
 
   let myPhone = '';
+
   let myName = '';
+
   let activeContact = null;
+
   let allMessages = [];
+
   let contacts = new Set();
+
   let userNamesMap = {};
+
   let pigeonBusy = false;
+
   let myHighScore = 0;
 
+
+  /* =========================
+     TELEFON KONTROLÜ
+  ========================= */
+
   function isValidPhone(phone) {
+
     return /^05[0-9]{9}$/.test(phone);
+
   }
 
-  function escapeHtml(str) {
-    if (!str) return '';
-    return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-  }
 
-  /* ==========================================
-     GİRİŞ VE HESAP YÖNETİMİ
-  ========================================== */
+  /* =========================
+     GİRİŞ
+  ========================= */
+
   function login() {
-    const phoneInput = document.getElementById('my-phone');
-    const passInput = document.getElementById('my-password');
-    const phone = phoneInput.value.trim();
-    const password = passInput.value.trim();
+
+    const phoneInput =
+      document.getElementById('my-phone');
+
+    const passInput =
+      document.getElementById('my-password');
+
+    const phone =
+      phoneInput.value.trim();
+
+    const password =
+      passInput.value.trim();
+
 
     if (!isValidPhone(phone)) {
-      alert('Geçerli numara girin!\n\nÖrnek: 05551112233');
+
+      alert(
+        'Geçerli numara girin!\n\nÖrnek: 05551112233'
+      );
+
       return;
+
     }
+
     if (!password || password.length < 4 || password.length > 12) {
-      alert('Şifreniz en az 4, en fazla 12 karakter olmalıdır!');
+
+      alert(
+        'Şifreniz en az 4, en fazla 12 karakter olmalıdır!'
+      );
+
       return;
+
     }
+
 
     myPhone = phone;
-    const button = document.getElementById('login-button');
-    button.disabled = true;
-    button.innerText = '🇹🇷 Fatih\'in Güvercini Hazırlanıyor...';
 
-    socket.emit('login', { phoneNumber: myPhone, password: password });
+
+    const button =
+      document.getElementById('login-button');
+
+
+    button.disabled = true;
+
+    button.innerText =
+      '🇹🇷Fatih"in Güvercini Hazırlanıyor...';
+
+
+    socket.emit('login', {
+
+      phoneNumber: myPhone,
+
+      password: password
+
+    });
+
   }
 
+
+  /* =========================
+     İSİM GÜNCELLE VE SAKLA
+  ========================= */
+
   function saveMyName() {
+
     const nameInput = document.getElementById('my-name-input');
     const newName = nameInput.value.trim();
 
@@ -633,20 +1285,39 @@
 
     myName = newName;
     userNamesMap[myPhone] = newName;
+
+    // Cihaz hafızasına yedekle
     localStorage.setItem('pigeon_name_' + myPhone, newName);
 
-    socket.emit('update name', { name: newName });
+    // Sunucuya ve Firebase'e gönder
+    socket.emit('update name', {
+      name: newName
+    });
+
     alert('İsminiz kalıcı olarak kaydedildi! 🕊️');
     renderContacts();
-    if (activeContact) renderActiveChat();
+    if (activeContact) {
+      renderActiveChat();
+    }
   }
 
+
+  /* =========================
+     ŞİFRE DEĞİŞTİR
+  ========================= */
+
   function changePassword() {
+
     const oldPassword = prompt('Lütfen mevcut şifrenizi girin:');
-    if (!oldPassword || !oldPassword.trim()) return;
+    if (oldPassword === null) return; // İptal edildi
+
+    if (!oldPassword.trim()) {
+      alert('Mevcut şifre boş bırakılamaz!');
+      return;
+    }
 
     const newPassword = prompt('Lütfen yeni şifrenizi girin (4-12 karakter):');
-    if (!newPassword) return;
+    if (newPassword === null) return; // İptal edildi
 
     const trimmedNew = newPassword.trim();
     if (trimmedNew.length < 4 || trimmedNew.length > 12) {
@@ -654,44 +1325,106 @@
       return;
     }
 
-    socket.emit('change password', { oldPassword: oldPassword.trim(), newPassword: trimmedNew });
-  }
-
-  /* ==========================================
-     SOKET OLAY DİNLEYİCİLERİ
-  ========================================== */
-  socket.on('login success', function(data) {
-    document.getElementById('login-overlay').style.display = 'none';
-    document.getElementById('my-phone-display').innerText = data.phoneNumber;
-
-    const localSavedName = localStorage.getItem('pigeon_name_' + myPhone);
-    myName = data.name || localSavedName || myPhone;
-    document.getElementById('my-name-input').value = (myName !== myPhone) ? myName : '';
-
-    userNamesMap = data.userNamesMap || {};
-    allMessages = data.history || [];
-    myHighScore = parseInt(data.highScore || 0, 10);
-
-    document.getElementById('menu-highscore').innerText = myHighScore;
-    document.getElementById('game-highscore').innerText = myHighScore;
-
-    allMessages.forEach(function(message) {
-      const other = message.senderPhone === myPhone ? message.receiverPhone : message.senderPhone;
-      if (message.senderPhone && message.senderName) userNamesMap[message.senderPhone] = message.senderName;
-      if (other) contacts.add(other);
+    socket.emit('change password', {
+      oldPassword: oldPassword.trim(),
+      newPassword: trimmedNew
     });
 
-    renderContacts();
-    loadClickerGame(); // Tıklama oyunu verilerini yükle
-    if (data.pigeonState === 'busy') {
-      pigeonBusy = true;
-      setSendButtonState(false);
-    } else {
-      pigeonBusy = false;
-    }
+  }
+
+  socket.on('password result', function(data) {
+    alert(data.message);
   });
 
-  socket.on('password result', data => alert(data.message));
+
+  /* =========================
+     GİRİŞ BAŞARILI
+  ========================= */
+
+  socket.on(
+    'login success',
+    function(data) {
+
+      console.log(
+        '✅ Giriş başarılı:',
+        data
+      );
+
+
+      document.getElementById(
+        'login-overlay'
+      ).style.display = 'none';
+
+
+      document.getElementById(
+        'my-phone-display'
+      ).innerText =
+        data.phoneNumber;
+
+
+      // Firebase veya yerel hafızadaki ismi al
+      const localSavedName = localStorage.getItem('pigeon_name_' + myPhone);
+      myName = data.name || localSavedName || myPhone;
+
+      // İsmi girdi kutusuna otomatik yaz
+      document.getElementById('my-name-input').value = (myName !== myPhone) ? myName : '';
+
+      userNamesMap = data.userNamesMap || {};
+      allMessages = data.history || [];
+      
+      // Rekor sayısını kesin sayıya (integer) dönüştürüyoruz
+      myHighScore = parseInt(data.highScore || 0, 10);
+      document.getElementById('menu-highscore').innerText = myHighScore;
+      document.getElementById('game-highscore').innerText = myHighScore;
+
+
+      allMessages.forEach(
+        function(message) {
+
+          const other =
+            message.senderPhone === myPhone
+              ? message.receiverPhone
+              : message.senderPhone;
+
+          if (message.senderPhone && message.senderName) {
+            userNamesMap[message.senderPhone] = message.senderName;
+          }
+
+          if (other) {
+
+            contacts.add(other);
+
+          }
+
+        }
+      );
+
+
+      renderContacts();
+
+
+      if (data.pigeonState === 'busy') {
+
+        pigeonBusy = true;
+
+        setSendButtonState(false);
+
+      }
+
+      else {
+
+        pigeonBusy = false;
+
+      }
+
+    }
+  );
+
+
+  /* =========================
+     KULLANICI İSMİ GÜNCELLENDİ
+  ========================= */
+
   socket.on('user name updated', function(data) {
     userNamesMap[data.phoneNumber] = data.name;
     renderContacts();
@@ -701,164 +1434,870 @@
     }
   });
 
+
+  /* =========================
+     REKOR GÜNCEL KONTROLÜ
+  ========================= */
+
   socket.on('score updated', function(data) {
     myHighScore = parseInt(data.highScore || 0, 10);
     document.getElementById('menu-highscore').innerText = myHighScore;
     document.getElementById('game-highscore').innerText = myHighScore;
   });
 
-  socket.on('login error', data => resetLoginButton(data.message));
-  socket.on('login failed', data => resetLoginButton(data.message));
 
-  function resetLoginButton(msg) {
-    const button = document.getElementById('login-button');
-    button.disabled = false;
-    button.innerText = 'Giriş Yap / Kayıt Ol';
-    alert(msg || 'Giriş başarısız.');
-  }
+  /* =========================
+     GİRİŞ HATASI
+  ========================= */
 
-  socket.on('pigeon error', function(data) {
-    pigeonBusy = false;
-    setSendButtonState(true);
-    alert(data.message);
-  });
+  socket.on(
+    'login error',
+    function(data) {
 
-  socket.on('pigeon sent', function(data) {
-    pigeonBusy = false;
-    setSendButtonState(true);
-    allMessages.push(data);
-    renderContacts();
-    if (activeContact === data.receiverPhone) renderActiveChat();
-  });
+      const button = document.getElementById('login-button');
+      button.disabled = false;
+      button.innerText = 'Giriş Yap / Kayıt Ol';
 
-  socket.on('pigeon received', function(data) {
-    contacts.add(data.senderPhone);
-    allMessages.push(data);
-    renderContacts();
-    if (activeContact === data.senderPhone) renderActiveChat();
-  });
+      alert(
+        data.message || 'Giriş başarısız.'
+      );
 
-  /* ==========================================
-     MESAJLAŞMA MANTIĞI
-  ========================================== */
-  function setSendButtonState(enabled) {
-    const btn = document.getElementById('send-btn');
-    btn.disabled = !enabled;
-    btn.style.opacity = enabled ? '1' : '0.5';
-  }
+    }
+  );
+
+  socket.on(
+    'login failed',
+    function(data) {
+
+      const button = document.getElementById('login-button');
+      button.disabled = false;
+      button.innerText = 'Giriş Yap / Kayıt Ol';
+
+      alert(
+        data.message || 'Giriş başarısız.'
+      );
+
+    }
+  );
+
+
+  /* =========================
+     GÜVERCİN HATASI
+  ========================= */
+
+  socket.on(
+    'pigeon error',
+    function(data) {
+
+      pigeonBusy = false;
+
+      setSendButtonState(true);
+
+      alert(
+        data.message
+      );
+
+    }
+  );
+
+
+  /* =========================
+     KİŞİ EKLE
+  ========================= */
 
   function addNewContact() {
-    const input = document.getElementById('new-contact-phone');
-    const phone = input.value.trim();
 
-    if (!isValidPhone(phone)) { alert('Geçerli numara girin!\n\nÖrnek: 05551112233'); return; }
-    if (phone === myPhone) { alert('Kendi numaranızı ekleyemezsiniz!'); return; }
+    const input =
+      document.getElementById(
+        'new-contact-phone'
+      );
 
-    contacts.add(phone);
-    input.value = '';
-    renderContacts();
-    selectContact(phone);
-  }
 
-  function renderContacts() {
-    const list = document.getElementById('contact-list');
-    list.innerHTML = '';
+    const phone =
+      input.value.trim();
 
-    contacts.forEach(function(phone) {
-      const displayName = userNamesMap[phone] || phone;
-      const item = document.createElement('div');
-      item.className = `contact-item ${phone === activeContact ? 'active' : ''}`;
-      item.onclick = function() { selectContact(phone); };
 
-      const lastMsg = allMessages.filter(m => (m.senderPhone === myPhone && m.receiverPhone === phone) || (m.senderPhone === phone && m.receiverPhone === myPhone)).pop();
+    if (!isValidPhone(phone)) {
 
-      item.innerHTML = `
-        <div class="contact-name">${escapeHtml(displayName)}</div>
-        <div class="contact-phone">${escapeHtml(phone)}</div>
-        <div class="contact-last-msg">${lastMsg ? escapeHtml(lastMsg.message) : 'Henüz mesaj yok'}</div>
-      `;
-      list.appendChild(item);
-    });
-  }
+      alert(
+        'Geçerli numara girin!\n\nÖrnek: 05551112233'
+      );
 
-  function selectContact(phone) {
-    activeContact = phone;
-    const displayName = userNamesMap[phone] || phone;
-    document.getElementById('active-contact-title').innerText = `${displayName} (${phone})`;
-    document.getElementById('active-contact-sub').innerText = '🕊️ Güvercin Postası Aktif';
-    document.getElementById('message-text').disabled = false;
-
-    if (!pigeonBusy) setSendButtonState(true);
-
-    document.getElementById('app-container').classList.add('show-chat');
-    renderContacts();
-    renderActiveChat();
-  }
-
-  function backToContacts() {
-    document.getElementById('app-container').classList.remove('show-chat');
-  }
-
-  function renderActiveChat() {
-    const chatBody = document.getElementById('chat-body');
-    chatBody.innerHTML = `<div id="system-banner" class="system-banner" style="display:none;"></div>`;
-
-    if (!activeContact) {
-      chatBody.innerHTML += `<div id="empty-state" class="empty-state">Mesajlaşmak için bir sohbet seçin</div>`;
       return;
+
     }
 
-    const filtered = allMessages.filter(m => (m.senderPhone === myPhone && m.receiverPhone === activeContact) || (m.senderPhone === activeContact && m.receiverPhone === myPhone));
-    filtered.forEach(appendMessageToBody);
+
+    if (phone === myPhone) {
+
+      alert(
+        'Kendi numaranızı ekleyemezsiniz!'
+      );
+
+      return;
+
+    }
+
+
+    contacts.add(phone);
+
+
+    input.value = '';
+
+
+    renderContacts();
+
+    selectContact(phone);
+
   }
 
-  function appendMessageToBody(msg) {
-    const chatBody = document.getElementById('chat-body');
-    const emptyState = document.getElementById('empty-state');
-    if (emptyState) emptyState.remove();
 
-    const isOutgoing = msg.senderPhone === myPhone;
-    const senderDisplayName = msg.senderName || userNamesMap[msg.senderPhone] || msg.senderPhone;
+  /* =========================
+     KİŞİLERİ GÖSTER
+  ========================= */
 
-    const bubble = document.createElement('div');
-    bubble.className = `msg-bubble ${isOutgoing ? 'msg-outgoing' : 'msg-incoming'}`;
-    bubble.innerHTML = `
-      <div class="msg-sender-name">${isOutgoing ? '(Siz)' : escapeHtml(senderDisplayName)}</div>
-      <div>${escapeHtml(msg.message)}</div>
-      <div class="msg-info"><span>${escapeHtml(String(msg.time || ''))}</span></div>
+  function renderContacts() {
+
+    const list =
+      document.getElementById(
+        'contact-list'
+      );
+
+
+    list.innerHTML = '';
+
+
+    contacts.forEach(
+      function(phone) {
+
+        const displayName = userNamesMap[phone] || phone;
+
+        const item =
+          document.createElement('div');
+
+
+        item.className =
+          `contact-item ${
+            phone === activeContact
+              ? 'active'
+              : ''
+          }`;
+
+
+        item.onclick =
+          function() {
+
+            selectContact(phone);
+
+          };
+
+
+        const lastMsg =
+          allMessages
+
+            .filter(
+              function(message) {
+
+                return (
+
+                  (
+                    message.senderPhone === myPhone &&
+                    message.receiverPhone === phone
+                  )
+
+                  ||
+
+                  (
+                    message.senderPhone === phone &&
+                    message.receiverPhone === myPhone
+                  )
+
+                );
+
+              }
+            )
+
+            .pop();
+
+
+        item.innerHTML = `
+
+          <div class="contact-name">
+            ${escapeHtml(displayName)}
+          </div>
+
+          <div class="contact-phone">
+            ${escapeHtml(phone)}
+          </div>
+
+          <div class="contact-last-msg">
+            ${
+              lastMsg
+                ? escapeHtml(lastMsg.message)
+                : 'Henüz mesaj yok'
+            }
+          </div>
+
+        `;
+
+
+        list.appendChild(item);
+
+      }
+    );
+
+  }
+
+
+  /* =========================
+     SOHBET SEÇ
+  ========================= */
+
+  function selectContact(phone) {
+
+    activeContact = phone;
+
+    const displayName = userNamesMap[phone] || phone;
+
+    document.getElementById(
+      'active-contact-title'
+    ).innerText = `${displayName} (${phone})`;
+
+
+    document.getElementById(
+      'active-contact-sub'
+    ).innerText =
+      '🕊️ Güvercin Postası Aktif';
+
+
+    document.getElementById(
+      'message-text'
+    ).disabled = false;
+
+
+    if (!pigeonBusy) {
+
+      document.getElementById(
+        'send-btn'
+      ).disabled = false;
+
+    }
+
+
+    document.getElementById(
+      'app-container'
+    ).classList.add('show-chat');
+
+
+    renderContacts();
+
+    renderActiveChat();
+
+  }
+
+
+  /* =========================
+     GERİ
+  ========================= */
+
+  function backToContacts() {
+
+    document.getElementById(
+      'app-container'
+    ).classList.remove(
+      'show-chat'
+    );
+
+  }
+
+
+  /* =========================
+     SOHBETİ GÖSTER
+  ========================= */
+
+  function renderActiveChat() {
+
+    const chatBody =
+      document.getElementById(
+        'chat-body'
+      );
+
+
+    chatBody.innerHTML = `
+
+      <div
+        id="system-banner"
+        class="system-banner"
+        style="display:none;"
+      ></div>
+
     `;
 
-    chatBody.appendChild(bubble);
-    chatBody.scrollTop = chatBody.scrollHeight;
+
+    if (!activeContact) {
+
+      chatBody.innerHTML += `
+
+        <div
+          id="empty-state"
+          class="empty-state"
+        >
+          Mesajlaşmak için bir sohbet seçin
+        </div>
+
+      `;
+
+      return;
+
+    }
+
+
+    const filtered =
+      allMessages.filter(
+        function(message) {
+
+          return (
+
+            (
+              message.senderPhone === myPhone &&
+              message.receiverPhone === activeContact
+            )
+
+            ||
+
+            (
+              message.senderPhone === activeContact &&
+              message.receiverPhone === myPhone
+            )
+
+          );
+
+        }
+      );
+
+
+    filtered.forEach(
+      appendMessageToBody
+    );
+
   }
+
+
+  /* =========================
+     MESAJ GÖSTER
+  ========================= */
+
+  function appendMessageToBody(msg) {
+
+    const chatBody =
+      document.getElementById(
+        'chat-body'
+      );
+
+
+    const emptyState =
+      document.getElementById(
+        'empty-state'
+      );
+
+
+    if (emptyState) {
+
+      emptyState.remove();
+
+    }
+
+
+    const isOutgoing =
+      msg.senderPhone === myPhone;
+
+    const senderDisplayName = msg.senderName || userNamesMap[msg.senderPhone] || msg.senderPhone;
+
+    const bubble =
+      document.createElement('div');
+
+
+    bubble.className =
+      `msg-bubble ${
+        isOutgoing
+          ? 'msg-outgoing'
+          : 'msg-incoming'
+      }`;
+
+
+    bubble.innerHTML = `
+
+      <div class="msg-sender-name">${isOutgoing ? '(Siz)' : escapeHtml(senderDisplayName)}</div>
+
+      <div>
+        ${escapeHtml(msg.message)}
+      </div>
+
+      <div class="msg-info">
+
+        <span>
+          ${escapeHtml(
+            String(msg.time)
+          )}
+        </span>
+
+      </div>
+
+    `;
+
+
+    chatBody.appendChild(
+      bubble
+    );
+
+
+    chatBody.scrollTop =
+      chatBody.scrollHeight;
+
+  }
+
+
+  /* =========================
+     GÜVERCİN GÖNDER
+  ========================= */
 
   function sendPigeon() {
-    if (!activeContact) { alert('Lütfen sohbet edilecek kişiyi seçin!'); return; }
-    if (pigeonBusy) { alert('Güvercinin şu anda yolda! 🕊️'); return; }
 
-    const messageInput = document.getElementById('message-text');
-    const message = messageInput.value.trim();
-    if (!message) return;
+    if (!activeContact) {
+
+      alert(
+        'Lütfen sohbet edilecek kişiyi seçin!'
+      );
+
+      return;
+
+    }
+
+
+    if (pigeonBusy) {
+
+      alert(
+        'Güvercinin şu anda yolda! 🕊️'
+      );
+
+      return;
+
+    }
+
+
+    const messageInput =
+      document.getElementById(
+        'message-text'
+      );
+
+
+    const message =
+      messageInput.value.trim();
+
+
+    if (!message) {
+
+      return;
+
+    }
+
+
+    socket.emit(
+      'send pigeon',
+      {
+
+        senderPhone: myPhone,
+
+        receiverPhone: activeContact,
+
+        message: message
+
+      }
+    );
+
 
     messageInput.value = '';
-    pigeonBusy = true;
-    setSendButtonState(false);
 
-    socket.emit('send pigeon', {
-      senderPhone: myPhone,
-      receiverPhone: activeContact,
-      message: message
-    });
   }
+
+
+  /* =========================
+     ENTER
+  ========================= */
 
   function handleKeyPress(e) {
-    if (e.key === 'Enter') sendPigeon();
+
+    if (e.key === 'Enter') {
+
+      sendPigeon();
+
+    }
+
   }
 
 
-  /* ==========================================
-     OYUN MODALI & MENÜ YÖNETİMİ
-  ========================================== */
+  /* =========================
+     BUTON DURUMU
+  ========================= */
+
+  function setSendButtonState(enabled) {
+
+    const button =
+      document.getElementById(
+        'send-btn'
+      );
+
+
+    button.disabled =
+      !enabled;
+
+  }
+
+
+  /* =========================
+     GÜVERCİN YOLA ÇIKTI
+  ========================= */
+
+  socket.on(
+    'pigeon status',
+    function(data) {
+
+      console.log(
+        '🕊️ Güvercin yola çıktı:',
+        data
+      );
+
+
+      allMessages.push(
+        data.messageData
+      );
+
+
+      if (
+        activeContact ===
+        data.receiverPhone
+      ) {
+
+        appendMessageToBody(
+          data.messageData
+        );
+
+      }
+
+
+      renderContacts();
+
+
+      pigeonBusy = true;
+
+      setSendButtonState(false);
+
+
+      const banner =
+        document.getElementById(
+          'system-banner'
+        );
+
+
+      if (!banner) {
+        return;
+      }
+
+
+      banner.style.display =
+        'block';
+
+
+      let timeLeft =
+        data.flightTimeInSeconds;
+
+
+      function updateTimer() {
+
+        if (timeLeft <= 0) {
+
+          banner.innerText =
+            `🕊️ Güvercin teslimat noktasına ulaştı.`;
+
+          return;
+
+        }
+
+
+        const minutes =
+          Math.floor(
+            timeLeft / 60
+          );
+
+
+        const seconds =
+          timeLeft % 60;
+
+
+        let remainingText;
+
+
+        if (minutes > 0) {
+
+          remainingText =
+            `${minutes} dk ${seconds} sn`;
+
+        }
+
+        else {
+
+          remainingText =
+            `${seconds} sn`;
+
+        }
+
+
+        banner.innerText =
+          `🕊️ Güvercin yolda... ` +
+          `Kalan: ${remainingText}`;
+
+
+        timeLeft--;
+
+        setTimeout(
+          updateTimer,
+          1000
+        );
+
+      }
+
+
+      updateTimer();
+
+    }
+  );
+
+
+  /* =========================
+     TESLİM EDİLDİ
+  ========================= */
+
+  socket.on(
+    'pigeon delivered',
+    function(data) {
+
+      pigeonBusy = false;
+
+
+      const banner =
+        document.getElementById(
+          'system-banner'
+        );
+
+
+      if (banner) {
+
+        banner.innerText =
+          data.message;
+
+        banner.style.display =
+          'block';
+
+      }
+
+
+      setSendButtonState(
+        activeContact !== null
+      );
+
+
+      setTimeout(
+        function() {
+
+          if (banner) {
+
+            banner.style.display =
+              'none';
+
+          }
+
+        },
+        4000
+      );
+
+    }
+  );
+
+
+  /* =========================
+     GÜVERCİN GELDİ
+  ========================= */
+
+  socket.on(
+    'pigeon arrived',
+    function(msgData) {
+
+      console.log(
+        '📬 Mesaj geldi:',
+        msgData
+      );
+
+
+      allMessages.push(
+        msgData
+      );
+
+
+      if (msgData.senderName) {
+        userNamesMap[msgData.senderPhone] = msgData.senderName;
+      }
+
+
+      contacts.add(
+        msgData.senderPhone
+      );
+
+
+      if (
+        activeContact ===
+        msgData.senderPhone
+      ) {
+
+        appendMessageToBody(
+          msgData
+        );
+
+      }
+
+
+      renderContacts();
+
+    }
+  );
+
+
+  /* =========================
+     GÜVENLİ HTML
+  ========================= */
+
+  function escapeHtml(value) {
+
+    return String(value)
+
+      .replaceAll('&', '&amp;')
+
+      .replaceAll('<', '&lt;')
+
+      .replaceAll('>', '&gt;')
+
+      .replaceAll('"', '&quot;')
+
+      .replaceAll("'", '&#039;');
+
+  }
+
+
+  /* =========================
+     TELEFONDAN ENTER
+  ========================= */
+
+  document
+    .getElementById('my-phone')
+    .addEventListener(
+      'keypress',
+      function(e) {
+
+        if (e.key === 'Enter') {
+
+          login();
+
+        }
+
+      }
+    );
+
+  document
+    .getElementById('my-password')
+    .addEventListener(
+      'keypress',
+      function(e) {
+
+        if (e.key === 'Enter') {
+
+          login();
+
+        }
+
+      }
+    );
+
+
+  document
+    .getElementById('new-contact-phone')
+    .addEventListener(
+      'keypress',
+      function(e) {
+
+        if (e.key === 'Enter') {
+
+          addNewContact();
+
+        }
+
+      }
+    );
+
+
+  document
+    .getElementById('my-name-input')
+    .addEventListener(
+      'keypress',
+      function(e) {
+
+        if (e.key === 'Enter') {
+
+          saveMyName();
+
+        }
+
+      }
+    );
+
+
+  /* =========================
+     FLAPPY BIRD OYUN MOTORU (TAM SABİT HIZ & REKOR DÜZELTME)
+  ========================= */
+
+  const canvas = document.getElementById('flappy-canvas');
+  const ctx = canvas.getContext('2d');
+
+  let gameAnimationId = null;
+  let gameRunning = false;
+  let gameScore = 0;
+
+  // Hız ve Zamanlama Değişkenleri
+  let lastTime = 0;
+  let accumulator = 0;
+  const timeStep = 1000 / 60; // Tam 60 FPS (16.66ms)
+
+  // Fizik Ayarları
+  let bird = {
+    x: 50,
+    y: 180,
+    velocity: 0,
+    gravity: 0.24,
+    jump: -5.5,
+    radius: 12
+  };
+
+  let pipes = [];
+  let pipeWidth = 50;
+  let pipeGap = 150;
+  let pipeSpeed = 2.5;
+  let frameCount = 0;
+
+  // Arka Plan Bulutları
+  let clouds = [
+    { x: 30, y: 50, scale: 0.8 },
+    { x: 180, y: 80, scale: 1.1 },
+    { x: 270, y: 35, scale: 0.7 }
+  ];
+
   function openGameModal() {
     document.getElementById('game-modal').style.display = 'flex';
     showGameMenu();
@@ -866,395 +2305,304 @@
 
   function closeGameModal() {
     document.getElementById('game-modal').style.display = 'none';
-    stopFlappyGame();
+    stopGameLoop();
   }
 
   function showGameMenu() {
-    stopFlappyGame();
-    document.getElementById('game-header-title').innerText = "🎮 Oyun Salonu";
+    stopGameLoop();
+    document.getElementById('game-header-title').innerText = '🎮 Oyun Salonu';
     document.getElementById('game-menu-screen').style.display = 'flex';
     document.getElementById('game-play-screen').style.display = 'none';
-    document.getElementById('clicker-play-screen').style.display = 'none';
-    document.getElementById('clicker-total-menu').innerText = `${formatClickerNum(clickerState.totalEarned)} ₺`;
+    document.getElementById('menu-highscore').innerText = myHighScore;
   }
 
   function selectGame(gameType) {
-    document.getElementById('game-menu-screen').style.display = 'none';
-
     if (gameType === 'flappy') {
-      document.getElementById('game-header-title').innerText = "🕊️ Güvercin Uçur";
+      document.getElementById('game-header-title').innerText = '🕊️ Güvercin Uçur';
+      document.getElementById('game-menu-screen').style.display = 'none';
       document.getElementById('game-play-screen').style.display = 'flex';
-      initFlappyCanvas();
-    } else if (gameType === 'clicker') {
-      document.getElementById('game-header-title').innerText = "👑 Güvercin İmparatorluğu";
-      document.getElementById('clicker-play-screen').style.display = 'flex';
-      initClickerAudio();
-      updateClickerUI();
+      document.getElementById('game-highscore').innerText = myHighScore;
+      resetGame();
     }
   }
 
-
-  /* ==========================================
-     1. OYUN: FLAPPY BIRD MOTORU
-  ========================================== */
-  let canvas, ctx;
-  let bird = { x: 50, y: 150, radius: 12, velocity: 0, gravity: 0.25, jump: -4.6 };
-  let pipes = [];
-  let score = 0;
-  let gameRunning = false;
-  let animId = null;
-  let pipeTimer = 0;
-
-  function initFlappyCanvas() {
-    canvas = document.getElementById('flappy-canvas');
-    ctx = canvas.getContext('2d');
-    document.getElementById('game-start-screen').style.display = 'flex';
-
-    canvas.onclick = jumpBird;
-    window.onkeydown = function(e) {
-      if (e.code === 'Space' && document.getElementById('game-play-screen').style.display !== 'none') {
-        e.preventDefault();
-        jumpBird();
-      }
-    };
+  function stopGameLoop() {
+    gameRunning = false;
+    if (gameAnimationId) {
+      cancelAnimationFrame(gameAnimationId);
+      gameAnimationId = null;
+    }
   }
 
-  function jumpBird() {
-    if (!gameRunning) return;
-    bird.velocity = bird.jump;
+  function resetGame() {
+    stopGameLoop();
+    bird.y = 180;
+    bird.velocity = 0;
+    pipes = [];
+    gameScore = 0;
+    frameCount = 0;
+    accumulator = 0;
+    document.getElementById('game-score').innerText = '0';
+    document.getElementById('game-start-screen').style.display = 'flex';
+    document.getElementById('game-start-screen').innerHTML = `
+      <h3>🕊️ Güvercin Uçur</h3>
+      <p>Ekrana Tıkla veya Boşluk Tuşuna Basarak Güvercini Havada Tut!</p>
+      <button onclick="startGame()">Başla</button>
+    `;
+    drawStaticScene();
   }
 
   function startGame() {
     document.getElementById('game-start-screen').style.display = 'none';
-    bird.y = 150;
+    bird.y = 180;
     bird.velocity = 0;
     pipes = [];
-    score = 0;
-    pipeTimer = 0;
+    gameScore = 0;
+    frameCount = 0;
+    accumulator = 0;
+    document.getElementById('game-score').innerText = '0';
+
+    stopGameLoop();
     gameRunning = true;
-    document.getElementById('game-score').innerText = score;
-    gameLoop();
+    lastTime = performance.now();
+    gameLoop(lastTime);
   }
 
-  function stopFlappyGame() {
-    gameRunning = false;
-    if (animId) cancelAnimationFrame(animId);
-  }
-
-  function gameLoop() {
+  function makeJump(e) {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     if (!gameRunning) return;
+    bird.velocity = bird.jump;
+  }
 
-    // Güncelleme
+  // MOBİL DOKUNMA VE TIKLAMA OLAYLARI
+  canvas.addEventListener('pointerdown', makeJump, { passive: false });
+
+  window.addEventListener('keydown', function(e) {
+    if (e.code === 'Space') {
+      const modal = document.getElementById('game-modal');
+      const isPlayScreen = document.getElementById('game-play-screen').style.display !== 'none';
+      if (modal.style.display !== 'none' && isPlayScreen && gameRunning) {
+        e.preventDefault();
+        makeJump();
+      }
+    }
+  });
+
+  /* GÖRSEL ÇİZİM FONKSİYONLARI */
+
+  function drawBackground() {
+    let skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    skyGrad.addColorStop(0, '#4ec0ca');
+    skyGrad.addColorStop(0.7, '#a0e8ef');
+    skyGrad.addColorStop(1, '#ded895');
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+    for (let c of clouds) {
+      if (gameRunning) {
+        c.x -= 0.4;
+        if (c.x < -60) c.x = canvas.width + 40;
+      }
+      drawCloud(c.x, c.y, c.scale);
+    }
+  }
+
+  function drawCloud(x, y, scale) {
+    ctx.beginPath();
+    ctx.arc(Math.round(x), Math.round(y), Math.round(16 * scale), 0, Math.PI * 2);
+    ctx.arc(Math.round(x + 12 * scale), Math.round(y - 10 * scale), Math.round(14 * scale), 0, Math.PI * 2);
+    ctx.arc(Math.round(x + 24 * scale), Math.round(y), Math.round(16 * scale), 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function drawGround() {
+    let groundHeight = 35;
+    let groundY = canvas.height - groundHeight;
+
+    ctx.fillStyle = '#ded895';
+    ctx.fillRect(0, groundY, canvas.width, groundHeight);
+
+    ctx.fillStyle = '#73bf2e';
+    ctx.fillRect(0, groundY, canvas.width, 8);
+    ctx.fillStyle = '#53a018';
+    ctx.fillRect(0, groundY + 8, canvas.width, 2);
+
+    ctx.strokeStyle = '#cbb86b';
+    ctx.lineWidth = 2;
+    let offset = Math.round((frameCount * pipeSpeed) % 16);
+    for (let x = -16; x < canvas.width + 16; x += 16) {
+      ctx.beginPath();
+      ctx.moveTo(x - offset, groundY + 10);
+      ctx.lineTo(x - offset - 6, canvas.height);
+      ctx.stroke();
+    }
+  }
+
+  function drawPipes() {
+    for (let p of pipes) {
+      let px = Math.round(p.x);
+      let pTop = Math.round(p.topHeight);
+      let pBottom = Math.round(p.bottomY);
+
+      let topGrad = ctx.createLinearGradient(px, 0, px + pipeWidth, 0);
+      topGrad.addColorStop(0, '#73bf2e');
+      topGrad.addColorStop(0.5, '#99e344');
+      topGrad.addColorStop(1, '#53a018');
+
+      ctx.fillStyle = topGrad;
+      ctx.fillRect(px, 0, pipeWidth, pTop);
+      ctx.strokeStyle = '#2e6307';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(px, 0, pipeWidth, pTop);
+
+      ctx.fillRect(px - 3, pTop - 18, pipeWidth + 6, 18);
+      ctx.strokeRect(px - 3, pTop - 18, pipeWidth + 6, 18);
+
+      let bottomHeight = canvas.height - 35 - pBottom;
+      ctx.fillRect(px, pBottom, pipeWidth, bottomHeight);
+      ctx.strokeRect(px, pBottom, pipeWidth, bottomHeight);
+
+      ctx.fillRect(px - 3, pBottom, pipeWidth + 6, 18);
+      ctx.strokeRect(px - 3, pBottom, pipeWidth + 6, 18);
+    }
+  }
+
+  function drawBird() {
+    ctx.save();
+    ctx.translate(Math.round(bird.x), Math.round(bird.y));
+    ctx.scale(-1, 1); // Sağa bakış
+    ctx.font = '26px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🕊️', 0, 0);
+    ctx.restore();
+  }
+
+  function drawStaticScene() {
+    drawBackground();
+    drawGround();
+    drawBird();
+  }
+
+  // FİZİK ADIMI HESAPLAYICI (Sadece oyun fiziğini işler)
+  function updatePhysics() {
+    frameCount++;
+
     bird.velocity += bird.gravity;
+    if (bird.velocity > 6.5) {
+      bird.velocity = 6.5;
+    }
     bird.y += bird.velocity;
 
-    pipeTimer++;
-    if (pipeTimer % 90 === 0) {
-      let gap = 110;
-      let topHeight = Math.floor(Math.random() * (canvas.height - gap - 100)) + 30;
-      pipes.push({ x: canvas.width, top: topHeight, bottom: canvas.height - topHeight - gap, passed: false });
+    // Boru Üretimi
+    if (frameCount % 100 === 0) {
+      let minTop = 40;
+      let maxTop = canvas.height - 35 - pipeGap - 40;
+      let topHeight = Math.floor(Math.random() * (maxTop - minTop + 1)) + minTop;
+
+      pipes.push({
+        x: canvas.width,
+        topHeight: topHeight,
+        bottomY: topHeight + pipeGap,
+        passed: false
+      });
     }
 
+    // Boruların Hareketi
     for (let i = 0; i < pipes.length; i++) {
       let p = pipes[i];
-      p.x -= 2;
+      p.x -= pipeSpeed;
 
-      // Skor
-      if (!p.passed && p.x + 40 < bird.x) {
+      if (!p.passed && p.x + pipeWidth < bird.x) {
         p.passed = true;
-        score++;
-        document.getElementById('game-score').innerText = score;
+        gameScore++;
+        document.getElementById('game-score').innerText = gameScore;
       }
 
       // Çarpışma
-      if (bird.x + bird.radius > p.x && bird.x - bird.radius < p.x + 40) {
-        if (bird.y - bird.radius < p.top || bird.y + bird.radius > canvas.height - p.bottom) {
-          gameOver();
-          return;
-        }
+      if (
+        bird.x + bird.radius > p.x &&
+        bird.x - bird.radius < p.x + pipeWidth &&
+        (bird.y - bird.radius < p.topHeight || bird.y + bird.radius > p.bottomY)
+      ) {
+        gameOver();
+        return false;
       }
     }
 
-    if (bird.y + bird.radius > canvas.height || bird.y - bird.radius < 0) {
+    pipes = pipes.filter(p => p.x + pipeWidth > -10);
+
+    // Zemin ve Tavan
+    if (bird.y + bird.radius >= canvas.height - 35 || bird.y - bird.radius <= 0) {
       gameOver();
-      return;
+      return false;
     }
 
-    // Çizim
-    ctx.fillStyle = '#70c5ce';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    return true;
+  }
 
-    // Kuş
-    ctx.font = '24px serif';
-    ctx.fillText('🕊️', bird.x - 12, bird.y + 8);
+  // SABİT ZAMAN ADIMLI OYUN DÖNGÜSÜ (Hız dalgalanması imkansız hale getirildi)
+  function gameLoop(timestamp) {
+    if (!gameRunning) return;
 
-    // Borular
-    ctx.fillStyle = '#2e7d32';
-    pipes.forEach(p => {
-      ctx.fillRect(p.x, 0, 40, p.top);
-      ctx.fillRect(p.x, canvas.height - p.bottom, 40, p.bottom);
-    });
+    if (!lastTime) lastTime = timestamp;
+    let deltaTime = timestamp - lastTime;
+    lastTime = timestamp;
 
-    animId = requestAnimationFrame(gameLoop);
+    // Mobil arka plana geçişlerde aşırı atlamayı önle
+    if (deltaTime > 100) deltaTime = 100;
+
+    accumulator += deltaTime;
+
+    // Sabit 16.66ms dilimlerinde fiziği çalıştır
+    while (accumulator >= timeStep) {
+      let alive = updatePhysics();
+      if (!alive) return; // Oyun bittiyse döngüyü kır
+      accumulator -= timeStep;
+    }
+
+    // Ekranı Çiz
+    drawBackground();
+    drawPipes();
+    drawGround();
+    drawBird();
+
+    if (gameRunning) {
+      gameAnimationId = requestAnimationFrame(gameLoop);
+    }
   }
 
   function gameOver() {
-    gameRunning = false;
-    if (score > myHighScore) {
-      myHighScore = score;
-      socket.emit('update score', { highScore: myHighScore });
+    stopGameLoop();
+
+    const currentScore = parseInt(gameScore, 10);
+    const numericHighScore = parseInt(myHighScore, 10);
+
+    // Rekor Kontrolü ve Firebase / Sunucu Güncellemesi
+    if (currentScore > numericHighScore) {
+      myHighScore = currentScore;
       document.getElementById('game-highscore').innerText = myHighScore;
       document.getElementById('menu-highscore').innerText = myHighScore;
+
+      // Mobilde kopmaları önlemek için hem numara hem skor iletiliyor
+      socket.emit('update score', { 
+        phoneNumber: myPhone, 
+        score: myHighScore 
+      });
     }
+
     document.getElementById('game-start-screen').style.display = 'flex';
+    document.getElementById('game-start-screen').innerHTML = `
+      <h3>Oyun Bitti!</h3>
+      <p>Skorunuz: <b>${currentScore}</b><br>En Yüksek Rekor: <b>${myHighScore}</b></p>
+      <button onclick="startGame()">Yeniden Oyna</button>
+    `;
   }
 
-
-  /* ==========================================
-     2. OYUN: GÜVERCİN İMPARATORLUĞU (CLICKER)
-  ========================================== */
-  let clickerAudioCtx = null;
-  let clickerSoundEnabled = true;
-
-  function initClickerAudio() {
-    if (!clickerAudioCtx) {
-      clickerAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (clickerAudioCtx.state === 'suspended') {
-      clickerAudioCtx.resume();
-    }
-  }
-
-  function playClickerSound(type) {
-    if (!clickerSoundEnabled) return;
-    initClickerAudio();
-    if (!clickerAudioCtx) return;
-
-    try {
-      const osc = clickerAudioCtx.createOscillator();
-      const gain = clickerAudioCtx.createGain();
-      osc.connect(gain);
-      gain.connect(clickerAudioCtx.destination);
-      const now = clickerAudioCtx.currentTime;
-
-      if (type === 'click') {
-        osc.frequency.setValueAtTime(400, now);
-        osc.frequency.exponentialRampToValueAtTime(800, now + 0.04);
-        gain.gain.setValueAtTime(0.12, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.04);
-        osc.start(now); osc.stop(now + 0.04);
-      } else if (type === 'buy') {
-        osc.frequency.setValueAtTime(350, now);
-        osc.frequency.setValueAtTime(700, now + 0.06);
-        gain.gain.setValueAtTime(0.18, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.12);
-        osc.start(now); osc.stop(now + 0.12);
-      } else if (type === 'upgrade') {
-        osc.frequency.setValueAtTime(523, now);
-        osc.frequency.setValueAtTime(783, now + 0.16);
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
-        osc.start(now); osc.stop(now + 0.25);
-      } else if (type === 'levelup') {
-        osc.frequency.setValueAtTime(440, now);
-        osc.frequency.setValueAtTime(880, now + 0.12);
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
-        osc.start(now); osc.stop(now + 0.3);
-      }
-    } catch(e) {}
-  }
-
-  function toggleClickerSound() {
-    clickerSoundEnabled = !clickerSoundEnabled;
-    document.getElementById('clicker-sound-btn').innerText = clickerSoundEnabled ? '🔊' : '🔇';
-  }
-
-  // DENGELENMİŞ TIKLAMA OYUNU VERİLERİ (Hızlı İlerleme & Düşük Fiyatlar)
-  let clickerState = {
-    money: 0,
-    totalEarned: 0,
-    level: 1,
-    upgrades: {
-      bag: { name: "Mektup Çantası", icon: "💼", count: 0, baseCost: 10, tier: 1, tierBaseCost: 120, powerPerTier: 1, desc: "Tıklama gücünü artırır." },
-      bird: { name: "Yavru Güvercin", icon: "🐣", count: 0, baseCost: 35, tier: 1, tierBaseCost: 300, powerPerTier: 1, desc: "Otomatik para kazandırır." }
-    }
-  };
-
-  function formatClickerNum(num) {
-    if (num < 1000) return Math.floor(num).toLocaleString('tr-TR');
-    if (num < 1000000) return (num / 1000).toFixed(1) + ' Bin';
-    return (num / 1000000).toFixed(2) + ' Milyon';
-  }
-
-  function getBagPower() { return clickerState.upgrades.bag.tier * clickerState.upgrades.bag.powerPerTier; }
-  function getBirdPower() { return clickerState.upgrades.bird.tier * clickerState.upgrades.bird.powerPerTier; }
-
-  function getClickPower() { return 1 + (clickerState.upgrades.bag.count * getBagPower()); }
-  function getCPS() { return (clickerState.upgrades.bird.count * getBirdPower()); }
-
-  function getBuyCost(key) {
-    const up = clickerState.upgrades[key];
-    return Math.floor(up.baseCost * Math.pow(1.12, up.count)); // %12 Artış
-  }
-
-  function getTierCost(key) {
-    const up = clickerState.upgrades[key];
-    return Math.floor(up.tierBaseCost * Math.pow(2.2, up.tier - 1));
-  }
-
-  function getNextLevelReq() { return Math.floor(80 * Math.pow(1.6, clickerState.level - 1)); }
-
-  function showClickerToast(msg) {
-    const toast = document.getElementById('clicker-toast');
-    toast.innerText = msg;
-    toast.style.display = 'block';
-    setTimeout(() => { toast.style.display = 'none'; }, 2000);
-  }
-
-  // Tıklama Etkileşimi
-  const clickArea = document.getElementById('clicker-click-area');
-  clickArea.addEventListener('pointerdown', (e) => {
-    playClickerSound('click');
-    const power = getClickPower();
-    clickerState.money += power;
-    clickerState.totalEarned += power;
-    checkClickerLevelUp();
-    updateClickerUI();
-
-    // Uçan Sayı Efekti
-    const floatEl = document.createElement('div');
-    floatEl.className = 'clicker-floating';
-    floatEl.innerText = `+${formatClickerNum(power)}`;
-
-    const rect = clickArea.getBoundingClientRect();
-    let x = e.clientX ? (e.clientX - rect.left) : (rect.width / 2);
-    let y = e.clientY ? (e.clientY - rect.top) : (rect.height / 2);
-
-    floatEl.style.left = `${x - 10}px`;
-    floatEl.style.top = `${y - 20}px`;
-
-    clickArea.appendChild(floatEl);
-    setTimeout(() => floatEl.remove(), 700);
-  });
-
-  function buyClickerItem(key) {
-    const cost = getBuyCost(key);
-    if (clickerState.money >= cost) {
-      clickerState.money -= cost;
-      clickerState.upgrades[key].count++;
-      playClickerSound('buy');
-      updateClickerUI();
-    }
-  }
-
-  function upgradeClickerTier(key) {
-    const cost = getTierCost(key);
-    if (clickerState.money >= cost) {
-      clickerState.money -= cost;
-      clickerState.upgrades[key].tier++;
-      playClickerSound('upgrade');
-      showClickerToast(`⭐ ${clickerState.upgrades[key].name} Seviye Atladı!`);
-      updateClickerUI();
-    }
-  }
-
-  function checkClickerLevelUp() {
-    let req = getNextLevelReq();
-    while (clickerState.totalEarned >= req) {
-      clickerState.level++;
-      playClickerSound('levelup');
-      showClickerToast(`👑 Seviye ${clickerState.level}'e Ulaştın!`);
-      req = getNextLevelReq();
-    }
-  }
-
-  function updateClickerUI() {
-    document.getElementById('clicker-money-text').innerText = `${formatClickerNum(clickerState.money)} ₺`;
-    document.getElementById('clicker-total-earned').innerText = `${formatClickerNum(clickerState.totalEarned)} ₺`;
-    document.getElementById('clicker-power-text').innerText = `${formatClickerNum(getClickPower())} ₺`;
-    document.getElementById('clicker-cps-text').innerText = `${formatClickerNum(getCPS())} ₺/sn`;
-
-    document.getElementById('clicker-level-badge').innerText = `Seviye ${clickerState.level}`;
-    const prevReq = clickerState.level === 1 ? 0 : Math.floor(80 * Math.pow(1.6, clickerState.level - 2));
-    const nextReq = getNextLevelReq();
-    const progress = Math.min(100, Math.max(0, ((clickerState.totalEarned - prevReq) / (nextReq - prevReq)) * 100));
-    document.getElementById('clicker-level-fill').style.width = `${progress}%`;
-
-    renderClickerUpgrades();
-    saveClickerGame();
-  }
-
-  function renderClickerUpgrades() {
-    const container = document.getElementById('clicker-upgrades-container');
-    container.innerHTML = '';
-
-    Object.keys(clickerState.upgrades).forEach(key => {
-      const up = clickerState.upgrades[key];
-      const buyCost = getBuyCost(key);
-      const tierCost = getTierCost(key);
-      const currentPower = key === 'bag' ? getBagPower() : getBirdPower();
-      const nextPower = (up.tier + 1) * up.powerPerTier;
-
-      const card = document.createElement('div');
-      card.className = 'clicker-card';
-      card.innerHTML = `
-        <div class="clicker-card-top">
-          <div class="clicker-card-icon">${up.icon}</div>
-          <div class="clicker-card-info">
-            <div class="clicker-card-title">
-              <span>${up.name}</span>
-              <span style="color:#00a884;">T${up.tier} (+${formatClickerNum(currentPower)})</span>
-            </div>
-            <div class="clicker-card-desc">${up.desc} Adet: ${up.count}</div>
-          </div>
-        </div>
-        <div class="clicker-card-btns">
-          <button class="clicker-btn ${clickerState.money >= buyCost ? 'can-afford-buy' : ''}" onclick="buyClickerItem('${key}')">
-            <span>Satın Al (+1)</span>
-            <span>${formatClickerNum(buyCost)} ₺</span>
-          </button>
-          <button class="clicker-btn ${clickerState.money >= tierCost ? 'can-afford-up' : ''}" onclick="upgradeClickerTier('${key}')">
-            <span>Yükselt (+${formatClickerNum(nextPower)})</span>
-            <span>${formatClickerNum(tierCost)} ₺</span>
-          </button>
-        </div>
-      `;
-      container.appendChild(card);
-    });
-  }
-
-  // Otomatik Kazanç Döngüsü
-  setInterval(() => {
-    const cps = getCPS();
-    if (cps > 0) {
-      const add = cps / 10;
-      clickerState.money += add;
-      clickerState.totalEarned += add;
-      checkClickerLevelUp();
-      if (document.getElementById('clicker-play-screen').style.display !== 'none') {
-        updateClickerUI();
-      }
-    }
-  }, 100);
-
-  function saveClickerGame() {
-    if (!myPhone) return;
-    localStorage.setItem('pigeon_clicker_' + myPhone, JSON.stringify(clickerState));
-  }
-
-  function loadClickerGame() {
-    if (!myPhone) return;
-    const saved = localStorage.getItem('pigeon_clicker_' + myPhone);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        clickerState = { ...clickerState, ...parsed };
-        clickerState.upgrades.bag = { ...clickerState.upgrades.bag, ...parsed.upgrades.bag };
-        clickerState.upgrades.bird = { ...clickerState.upgrades.bird, ...parsed.upgrades.bird };
-      } catch(e) {}
-    }
-  }
 </script>
 
 </body>
