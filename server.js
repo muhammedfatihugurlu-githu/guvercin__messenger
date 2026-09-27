@@ -8,677 +8,972 @@ const io = new Server(server);
 
 app.use(express.static('public'));
 
-const users = {};
-const userLocations = {};
-const messageHistory = [];
-const pigeonState = {};
+// Firebase Realtime Database Adresleri
+const FIREBASE_MESSAGES_URL = "https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/messages.json";
+const FIREBASE_USERS_URL = "https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/users.json";
+const FIREBASE_PASSWORDS_URL = "https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/passwords.json";
+const FIREBASE_HIGHSCORES_URL = "https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/highscores.json";
+const FIREBASE_EMPIRE_GAMES_URL = "https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/gameStates";
 
-// ===============================
-// FIREBASE
-// ===============================
+// Firebase'den tüm mesajları okuma
+async function loadMessages() {
+  try {
+    const response = await fetch(FIREBASE_MESSAGES_URL);
+    if (!response.ok) return [];
 
-const FIREBASE_DATABASE_URL =
-    "https://guvercin-chat-8d21e-default-rtdb.firebaseio.com";
+    const data = await response.json();
 
-const FIREBASE_NAMES_URL =
-    `${FIREBASE_DATABASE_URL}/names.json`;
+    return data ? Object.values(data) : [];
 
-const FIREBASE_HIGHSCORES_URL =
-    `${FIREBASE_DATABASE_URL}/highscores.json`;
-
-const FIREBASE_EMPIRE_GAMES_URL =
-    `${FIREBASE_DATABASE_URL}/gameStates`;
-
-// ===============================
-// FIREBASE YARDIMCI FONKSİYONLARI
-// ===============================
-
-async function firebaseGet(url) {
-    try {
-        const response = await fetch(url);
-
-        if (!response.ok) {
-            throw new Error(`Firebase GET hatası: ${response.status}`);
-        }
-
-        return await response.json();
-    } catch (error) {
-        console.error("Firebase GET hatası:", error);
-        return null;
-    }
+  } catch (err) {
+    console.error('Firebase mesaj okuma hatası:', err);
+    return [];
+  }
 }
 
-async function firebasePut(url, data) {
-    try {
-        const response = await fetch(url, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(data)
-        });
+// Firebase'e yeni mesaj kaydetme
+async function saveMessage(newMsg) {
+  try {
 
-        if (!response.ok) {
-            throw new Error(`Firebase PUT hatası: ${response.status}`);
-        }
+    await fetch(FIREBASE_MESSAGES_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(newMsg)
+    });
 
-        return await response.json();
-    } catch (error) {
-        console.error("Firebase PUT hatası:", error);
-        return null;
-    }
+    console.log('✅ Mesaj Firebase veritabanına kaydedildi.');
+
+  } catch (err) {
+    console.error('Firebase mesaj kaydetme hatası:', err);
+  }
 }
 
-// ===============================
-// İSİM KAYDET / YÜKLE
-// ===============================
+// Firebase'den kayıtlı kullanıcı isimlerini okuma
+async function loadUserNamesFromFirebase() {
+  try {
 
-async function getNameFromFirebase(phone) {
-    const names = await firebaseGet(FIREBASE_NAMES_URL);
+    const response = await fetch(FIREBASE_USERS_URL);
 
-    if (!names || !names[phone]) {
-        return null;
-    }
+    if (!response.ok) return {};
 
-    return names[phone];
+    const data = await response.json();
+
+    return data || {};
+
+  } catch (err) {
+    console.error('Firebase isim okuma hatası:', err);
+    return {};
+  }
 }
 
-async function saveNameToFirebase(phone, name) {
-    if (!phone || !name) return;
+// Firebase'e kullanıcı ismini kaydetme
+async function saveUserNameToFirebase(phone, name) {
+  try {
 
-    const url =
-        `${FIREBASE_DATABASE_URL}/names/${encodeURIComponent(phone)}.json`;
+    const userUrl =
+      `https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/users/${phone}.json`;
 
-    await firebasePut(url, name);
+    await fetch(userUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(name)
+    });
+
+  } catch (err) {
+    console.error('Firebase isim kaydetme hatası:', err);
+  }
 }
 
-// ===============================
-// SKOR KAYDET / YÜKLE
-// ===============================
+// Firebase'den şifreleri okuma
+async function loadPasswordsFromFirebase() {
+  try {
 
-async function getHighScoreFromFirebase(phone) {
-    const scores = await firebaseGet(FIREBASE_HIGHSCORES_URL);
+    const response = await fetch(FIREBASE_PASSWORDS_URL);
 
-    if (!scores || !scores[phone]) {
-        return 0;
-    }
+    if (!response.ok) return {};
 
-    return Number(scores[phone]) || 0;
+    const data = await response.json();
+
+    return data || {};
+
+  } catch (err) {
+    console.error('Firebase şifre okuma hatası:', err);
+    return {};
+  }
 }
 
+// Firebase'e şifre kaydetme
+async function savePasswordToFirebase(phone, password) {
+  try {
+
+    const passUrl =
+      `https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/passwords/${phone}.json`;
+
+    await fetch(passUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(password)
+    });
+
+  } catch (err) {
+    console.error('Firebase şifre kaydetme hatası:', err);
+  }
+}
+
+// Firebase'den rekorları okuma
+async function loadHighScoresFromFirebase() {
+  try {
+
+    const response = await fetch(FIREBASE_HIGHSCORES_URL);
+
+    if (!response.ok) return {};
+
+    const data = await response.json();
+
+    return data || {};
+
+  } catch (err) {
+    console.error('Firebase rekor okuma hatası:', err);
+    return {};
+  }
+}
+
+// Firebase'e rekor kaydetme
 async function saveHighScoreToFirebase(phone, score) {
-    if (!phone) return;
+  try {
 
-    const url =
-        `${FIREBASE_DATABASE_URL}/highscores/${encodeURIComponent(phone)}.json`;
+    const scoreUrl =
+      `https://guvercin-chat-8d21e-default-rtdb.firebaseio.com/highscores/${phone}.json`;
 
-    await firebasePut(url, Number(score) || 0);
+    await fetch(scoreUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(score)
+    });
+
+  } catch (err) {
+    console.error('Firebase rekor kaydetme hatası:', err);
+  }
 }
 
-// ===============================
-// GÜVERCİN İMPARATORLUĞU
-// ===============================
+
+// ==========================================
+// GÜVERCİN İMPARATORLUĞU FIREBASE
+// ==========================================
 
 async function loadEmpireGameFromFirebase(phone) {
-    if (!phone) return null;
+
+  try {
 
     const url =
-        `${FIREBASE_EMPIRE_GAMES_URL}/${encodeURIComponent(phone)}.json`;
+      `${FIREBASE_EMPIRE_GAMES_URL}/${encodeURIComponent(phone)}.json`;
 
-    return await firebaseGet(url);
+    const response = await fetch(url);
+
+    if (!response.ok) return null;
+
+    return await response.json();
+
+  } catch (err) {
+
+    console.error(
+      'Firebase imparatorluk oyunu okuma hatası:',
+      err
+    );
+
+    return null;
+  }
 }
+
 
 async function saveEmpireGameToFirebase(phone, state) {
-    if (!phone || !state) return false;
+
+  try {
 
     const safeState = {
-        money: Math.max(0, Number(state.money) || 0),
 
-        totalEarned:
-            Math.max(0, Number(state.totalEarned) || 0),
+      money:
+        Math.max(
+          0,
+          Number(state?.money) || 0
+        ),
 
-        level:
-            Math.max(1, Math.floor(Number(state.level) || 1)),
+      totalEarned:
+        Math.max(
+          0,
+          Number(state?.totalEarned) || 0
+        ),
 
-        upgrades: {
-            bag: {
-                count:
-                    Math.max(
-                        0,
-                        Math.floor(
-                            Number(
-                                state.upgrades?.bag?.count
-                            ) || 0
-                        )
-                    ),
+      level:
+        Math.max(
+          1,
+          Math.floor(
+            Number(state?.level) || 1
+          )
+        ),
 
-                tier:
-                    Math.max(
-                        1,
-                        Math.floor(
-                            Number(
-                                state.upgrades?.bag?.tier
-                            ) || 1
-                        )
-                    )
-            },
+      upgrades: {
 
-            bird: {
-                count:
-                    Math.max(
-                        0,
-                        Math.floor(
-                            Number(
-                                state.upgrades?.bird?.count
-                            ) || 0
-                        )
-                    ),
+        bag: {
 
-                tier:
-                    Math.max(
-                        1,
-                        Math.floor(
-                            Number(
-                                state.upgrades?.bird?.tier
-                            ) || 1
-                        )
-                    )
-            }
+          count:
+            Math.max(
+              0,
+              Math.floor(
+                Number(
+                  state?.upgrades?.bag?.count
+                ) || 0
+              )
+            ),
+
+          tier:
+            Math.max(
+              1,
+              Math.floor(
+                Number(
+                  state?.upgrades?.bag?.tier
+                ) || 1
+              )
+            )
         },
 
-        updatedAt: Date.now()
+        bird: {
+
+          count:
+            Math.max(
+              0,
+              Math.floor(
+                Number(
+                  state?.upgrades?.bird?.count
+                ) || 0
+              )
+            ),
+
+          tier:
+            Math.max(
+              1,
+              Math.floor(
+                Number(
+                  state?.upgrades?.bird?.tier
+                ) || 1
+              )
+            )
+        }
+      }
     };
 
+
     const url =
-        `${FIREBASE_EMPIRE_GAMES_URL}/${encodeURIComponent(phone)}.json`;
+      `${FIREBASE_EMPIRE_GAMES_URL}/${encodeURIComponent(phone)}.json`;
 
-    const result = await firebasePut(url, safeState);
 
-    return result !== null;
+    const response = await fetch(url, {
+
+      method: 'PUT',
+
+      headers: {
+        'Content-Type': 'application/json'
+      },
+
+      body: JSON.stringify(safeState)
+
+    });
+
+
+    return response.ok;
+
+  } catch (err) {
+
+    console.error(
+      'Firebase imparatorluk oyunu kaydetme hatası:',
+      err
+    );
+
+    return false;
+  }
 }
 
-// ===============================
-// MESAFE HESAPLAMA
-// ===============================
 
-function calculateDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371;
+// ==========================================
+// KULLANICI VERİLERİ
+// ==========================================
 
-    const dLat =
-        (lat2 - lat1) * Math.PI / 180;
+const userNames = {};
+const userPasswords = {};
+const pigeonState = {};
 
-    const dLon =
-        (lon2 - lon1) * Math.PI / 180;
 
-    const a =
-        Math.sin(dLat / 2) *
-        Math.sin(dLat / 2) +
-
-        Math.cos(lat1 * Math.PI / 180) *
-        Math.cos(lat2 * Math.PI / 180) *
-
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
-
-    const c =
-        2 *
-        Math.atan2(
-            Math.sqrt(a),
-            Math.sqrt(1 - a)
-        );
-
-    return R * c;
-}
-
-// ===============================
+// ==========================================
 // SOCKET.IO
-// ===============================
+// ==========================================
 
 io.on('connection', (socket) => {
 
-    console.log("Yeni bağlantı:", socket.id);
 
-    // ===============================
-    // LOGIN
-    // ===============================
+  // ========================================
+  // KULLANICI GİRİŞİ VE ŞİFRE KONTROLÜ
+  // ========================================
 
-    socket.on('login', async (data) => {
+  socket.on('login', async (data) => {
 
-        try {
+    const {
+      phoneNumber,
+      password
+    } = data;
 
-            const phoneNumber =
-                String(data?.phoneNumber || "").trim();
 
-            const latitude =
-                Number(data?.latitude);
+    if (!phoneNumber || !password) {
 
-            const longitude =
-                Number(data?.longitude);
-
-            if (!/^05[0-9]{9}$/.test(phoneNumber)) {
-
-                socket.emit("login error", {
-                    message:
-                        "Geçerli bir telefon numarası gir."
-                });
-
-                return;
-            }
-
-            users[socket.id] = {
-                phoneNumber,
-                latitude,
-                longitude
-            };
-
-            userLocations[phoneNumber] = {
-                latitude,
-                longitude
-            };
-
-            // Firebase'den bilgileri getir
-            const [
-                firebaseName,
-                highScore,
-                empireGameState
-            ] = await Promise.all([
-
-                getNameFromFirebase(phoneNumber),
-
-                getHighScoreFromFirebase(phoneNumber),
-
-                loadEmpireGameFromFirebase(phoneNumber)
-
-            ]);
-
-            const userName =
-                firebaseName || "İsimsiz";
-
-            users[socket.id].name = userName;
-
-            socket.emit("login success", {
-
-                phoneNumber,
-
-                name: userName,
-
-                highScore,
-
-                empireGameState:
-                    empireGameState || null
-
-            });
-
-            console.log(
-                "Giriş başarılı:",
-                phoneNumber
-            );
-
-        } catch (error) {
-
-            console.error(
-                "Login hatası:",
-                error
-            );
-
-            socket.emit("login error", {
-                message:
-                    "Giriş sırasında hata oluştu."
-            });
+      return socket.emit(
+        'login error',
+        {
+          message:
+            'Telefon numarası ve şifre zorunludur!'
         }
-    });
+      );
+    }
 
-    // ===============================
-    // İSİM KAYDET
-    // ===============================
 
-    socket.on('save name', async (data) => {
+    // Şifre uzunluk kontrolü
 
-        try {
+    if (
+      password.length < 4 ||
+      password.length > 12
+    ) {
 
-            const user =
-                users[socket.id];
-
-            if (!user) return;
-
-            const name =
-                String(data?.name || "").trim();
-
-            if (!name) return;
-
-            user.name = name;
-
-            await saveNameToFirebase(
-                user.phoneNumber,
-                name
-            );
-
-            socket.emit("name saved", {
-                name
-            });
-
-        } catch (error) {
-
-            console.error(
-                "İsim kaydetme hatası:",
-                error
-            );
+      return socket.emit(
+        'login error',
+        {
+          message:
+            'Şifreniz en az 4, en fazla 12 karakter olmalıdır!'
         }
-    });
+      );
+    }
 
-    // ===============================
-    // KONUM GÜNCELLE
-    // ===============================
 
-    socket.on('update location', (data) => {
+    // Firebase'den güncel şifreleri çek
 
-        const user =
-            users[socket.id];
+    const firebasePasswords =
+      await loadPasswordsFromFirebase();
 
-        if (!user) return;
 
-        const latitude =
-            Number(data?.latitude);
+    if (firebasePasswords[phoneNumber]) {
 
-        const longitude =
-            Number(data?.longitude);
+      // Kullanıcı var
 
-        if (
-            !Number.isFinite(latitude) ||
-            !Number.isFinite(longitude)
-        ) {
-            return;
-        }
+      if (
+        firebasePasswords[phoneNumber] !==
+        password
+      ) {
 
-        user.latitude = latitude;
-        user.longitude = longitude;
-
-        userLocations[user.phoneNumber] = {
-            latitude,
-            longitude
-        };
-
-        socket.broadcast.emit(
-            "user location updated",
-            {
-                phoneNumber:
-                    user.phoneNumber,
-
-                latitude,
-
-                longitude
-            }
+        return socket.emit(
+          'login error',
+          {
+            message:
+              'Girdiğiniz şifre yanlış!'
+          }
         );
-    });
+      }
 
-    // ===============================
-    // MESAJ GÖNDER
-    // ===============================
+    } else {
 
-    socket.on('send message', (data) => {
+      // İlk giriş
 
-        const user =
-            users[socket.id];
+      await savePasswordToFirebase(
+        phoneNumber,
+        password
+      );
 
-        if (!user) return;
+      console.log(
+        `🔑 Yeni kullanıcı kaydoldu: ${phoneNumber}`
+      );
+    }
 
-        const receiver =
-            String(data?.receiver || "").trim();
 
-        const message =
-            String(data?.message || "").trim();
+    userPasswords[phoneNumber] =
+      password;
 
-        if (!receiver || !message) {
-            return;
+    socket.phoneNumber =
+      phoneNumber;
+
+
+    // Kullanıcıyı telefon numarasına özel odaya al
+
+    socket.join(phoneNumber);
+
+
+    // Firebase verilerini getir
+
+    const [
+      firebaseNames,
+      firebaseScores,
+      empireGameState
+    ] = await Promise.all([
+
+      loadUserNamesFromFirebase(),
+
+      loadHighScoresFromFirebase(),
+
+      loadEmpireGameFromFirebase(
+        phoneNumber
+      )
+
+    ]);
+
+
+    userNames[phoneNumber] =
+      firebaseNames[phoneNumber] ||
+      userNames[phoneNumber] ||
+      phoneNumber;
+
+
+    const userHighScore =
+      firebaseScores[phoneNumber] || 0;
+
+
+    if (!pigeonState[phoneNumber]) {
+
+      pigeonState[phoneNumber] =
+        'home';
+    }
+
+
+    // Mesaj geçmişini Firebase'den getir
+
+    const allMessages =
+      await loadMessages();
+
+
+    const userHistory =
+      allMessages.filter(
+        (m) =>
+          m.senderPhone === phoneNumber ||
+          m.receiverPhone === phoneNumber
+      );
+
+
+    // ======================================
+    // LOGIN SUCCESS
+    // ======================================
+
+    socket.emit(
+      'login success',
+      {
+
+        phoneNumber,
+
+        name:
+          userNames[phoneNumber],
+
+        userNamesMap:
+          {
+            ...firebaseNames,
+            ...userNames
+          },
+
+        history:
+          userHistory,
+
+        pigeonState:
+          pigeonState[phoneNumber],
+
+        highScore:
+          userHighScore,
+
+        // YENİ:
+        empireGameState:
+          empireGameState || null
+      }
+    );
+
+
+    console.log(
+      `📍 ${phoneNumber} (${userNames[phoneNumber]}) başarıyla giriş yaptı.`
+    );
+
+  });
+
+
+  // ========================================
+  // İSİM GÜNCELLEME
+  // ========================================
+
+  socket.on(
+    'update name',
+    async (data) => {
+
+      const phoneNumber =
+        socket.phoneNumber;
+
+      if (!phoneNumber) return;
+
+
+      const newName =
+        data.name
+          ? data.name.trim()
+          : phoneNumber;
+
+
+      userNames[phoneNumber] =
+        newName || phoneNumber;
+
+
+      await saveUserNameToFirebase(
+        phoneNumber,
+        userNames[phoneNumber]
+      );
+
+
+      io.emit(
+        'user name updated',
+        {
+
+          phoneNumber,
+
+          name:
+            userNames[phoneNumber]
+
         }
+      );
 
-        const messageData = {
+    }
+  );
 
-            sender:
-                user.phoneNumber,
 
-            senderName:
-                user.name || "İsimsiz",
+  // ========================================
+  // ŞİFRE DEĞİŞTİRME
+  // ========================================
 
-            receiver,
+  socket.on(
+    'change password',
+    async (data) => {
 
-            message,
+      const phoneNumber =
+        socket.phoneNumber;
 
-            timestamp:
-                Date.now()
-        };
+      if (!phoneNumber) return;
 
-        messageHistory.push(
-            messageData
+
+      const {
+        oldPassword,
+        newPassword
+      } = data;
+
+
+      const firebasePasswords =
+        await loadPasswordsFromFirebase();
+
+
+      const currentPassword =
+        firebasePasswords[phoneNumber] ||
+        userPasswords[phoneNumber];
+
+
+      if (
+        currentPassword &&
+        currentPassword !== oldPassword
+      ) {
+
+        return socket.emit(
+          'password result',
+          {
+
+            success: false,
+
+            message:
+              'Mevcut şifrenizi yanlış girdiniz!'
+
+          }
+        );
+      }
+
+
+      const trimmedNewPass =
+        newPassword
+          ? newPassword.trim()
+          : '';
+
+
+      if (
+        trimmedNewPass.length < 4 ||
+        trimmedNewPass.length > 12
+      ) {
+
+        return socket.emit(
+          'password result',
+          {
+
+            success: false,
+
+            message:
+              'Yeni şifreniz en az 4, en fazla 12 karakter olmalıdır!'
+
+          }
+        );
+      }
+
+
+      userPasswords[phoneNumber] =
+        trimmedNewPass;
+
+
+      await savePasswordToFirebase(
+        phoneNumber,
+        trimmedNewPass
+      );
+
+
+      socket.emit(
+        'password result',
+        {
+
+          success: true,
+
+          message:
+            'Şifreniz başarıyla değiştirildi! 🕊️'
+
+        }
+      );
+
+    }
+  );
+
+
+  // ========================================
+  // FLAPPY BIRD REKOR
+  // ========================================
+
+  socket.on(
+    'update score',
+    async (data) => {
+
+      const phoneNumber =
+        socket.phoneNumber;
+
+      if (!phoneNumber) return;
+
+
+      const newScore =
+        parseInt(
+          data.score,
+          10
         );
 
-        // Göndericiye
+
+      if (
+        isNaN(newScore) ||
+        newScore <= 0
+      ) {
+        return;
+      }
+
+
+      const highScores =
+        await loadHighScoresFromFirebase();
+
+
+      const currentHighScore =
+        highScores[phoneNumber] || 0;
+
+
+      if (
+        newScore >
+        currentHighScore
+      ) {
+
+        await saveHighScoreToFirebase(
+          phoneNumber,
+          newScore
+        );
+
+
         socket.emit(
-            "message received",
-            messageData
+          'score updated',
+          {
+
+            highScore:
+              newScore,
+
+            message:
+              'Yeni rekor kırıldı! 🏆'
+
+          }
         );
 
-        // Alıcıya
-        for (const socketId in users) {
-
-            if (
-                users[socketId].phoneNumber ===
-                receiver
-            ) {
-
-                io.to(socketId).emit(
-                    "message received",
-                    messageData
-                );
-            }
-        }
-    });
-
-    // ===============================
-    // YÜKSEK SKOR
-    // ===============================
-
-    socket.on('save high score', async (data) => {
-
-        try {
-
-            const user =
-                users[socket.id];
-
-            if (!user) return;
-
-            const score =
-                Math.max(
-                    0,
-                    Number(data?.score) || 0
-                );
-
-            const currentScore =
-                await getHighScoreFromFirebase(
-                    user.phoneNumber
-                );
-
-            if (score > currentScore) {
-
-                await saveHighScoreToFirebase(
-                    user.phoneNumber,
-                    score
-                );
-
-                socket.emit(
-                    "high score saved",
-                    {
-                        score
-                    }
-                );
-            }
-
-        } catch (error) {
-
-            console.error(
-                "Skor kaydetme hatası:",
-                error
-            );
-        }
-    });
-
-    // ===============================
-    // GÜVERCİN İMPARATORLUĞU KAYDET
-    // ===============================
-
-    socket.on(
-        'save empire game',
-        async (data) => {
-
-            try {
-
-                const user =
-                    users[socket.id];
-
-                if (!user) {
-
-                    socket.emit(
-                        "empire game saved",
-                        {
-                            success: false,
-                            message:
-                                "Giriş yapılmamış."
-                        }
-                    );
-
-                    return;
-                }
-
-                const state =
-                    data?.state;
-
-                if (!state) {
-
-                    socket.emit(
-                        "empire game saved",
-                        {
-                            success: false,
-                            message:
-                                "Oyun verisi bulunamadı."
-                        }
-                    );
-
-                    return;
-                }
-
-                const success =
-                    await saveEmpireGameToFirebase(
-                        user.phoneNumber,
-                        state
-                    );
-
-                socket.emit(
-                    "empire game saved",
-                    {
-                        success
-                    }
-                );
-
-            } catch (error) {
-
-                console.error(
-                    "Güvercin İmparatorluğu kaydetme hatası:",
-                    error
-                );
-
-                socket.emit(
-                    "empire game saved",
-                    {
-                        success: false
-                    }
-                );
-            }
-        }
-    );
-
-    // ===============================
-    // OYUN KAYDINI YÜKLE
-    // ===============================
-
-    socket.on(
-        'load empire game',
-        async () => {
-
-            try {
-
-                const user =
-                    users[socket.id];
-
-                if (!user) return;
-
-                const state =
-                    await loadEmpireGameFromFirebase(
-                        user.phoneNumber
-                    );
-
-                socket.emit(
-                    "empire game loaded",
-                    {
-                        state:
-                            state || null
-                    }
-                );
-
-            } catch (error) {
-
-                console.error(
-                    "Oyun yükleme hatası:",
-                    error
-                );
-            }
-        }
-    );
-
-    // ===============================
-    // BAĞLANTI KESİLDİ
-    // ===============================
-
-    socket.on('disconnect', () => {
-
-        const user =
-            users[socket.id];
-
-        if (user) {
-
-            delete userLocations[
-                user.phoneNumber
-            ];
-
-            console.log(
-                "Kullanıcı ayrıldı:",
-                user.phoneNumber
-            );
-        }
-
-        delete users[socket.id];
 
         console.log(
-            "Bağlantı kapandı:",
-            socket.id
+          `🏆 ${phoneNumber} yeni rekor kırdı: ${newScore}`
         );
-    });
+      }
+
+    }
+  );
+
+
+  // ========================================
+  // GÜVERCİN GÖNDER
+  // ========================================
+
+  socket.on(
+    'send pigeon',
+    async (data) => {
+
+      const {
+        senderPhone,
+        receiverPhone,
+        message
+      } = data;
+
+
+      if (
+        pigeonState[senderPhone] ===
+        'busy'
+      ) {
+
+        return socket.emit(
+          'pigeon error',
+          {
+
+            message:
+              'Güvercinin şu an yolda! Teslimatı tamamlamasını beklemelisin.'
+
+          }
+        );
+      }
+
+
+      pigeonState[senderPhone] =
+        'busy';
+
+
+      // Türkiye saati
+
+      const timestamp =
+        new Date().toLocaleTimeString(
+          'tr-TR',
+          {
+
+            timeZone:
+              'Europe/Istanbul',
+
+            hour:
+              '2-digit',
+
+            minute:
+              '2-digit'
+
+          }
+        );
+
+
+      const newMsg = {
+
+        id:
+          Date.now(),
+
+        senderPhone,
+
+        senderName:
+          userNames[senderPhone] ||
+          senderPhone,
+
+        receiverPhone,
+
+        message,
+
+        time:
+          timestamp,
+
+        status:
+          'teslim edildi'
+
+      };
+
+
+      // Firebase'e kaydet
+
+      await saveMessage(
+        newMsg
+      );
+
+
+      // Gönderene bildir
+
+      socket.emit(
+        'pigeon status',
+        {
+
+          receiverPhone,
+
+          flightTimeInSeconds:
+            0,
+
+          messageData:
+            newMsg
+
+        }
+      );
+
+
+      // Alıcıya anında gönder
+
+      io.to(
+        receiverPhone
+      ).emit(
+        'pigeon arrived',
+        newMsg
+      );
+
+
+      pigeonState[senderPhone] =
+        'home';
+
+
+      socket.emit(
+        'pigeon delivered',
+        {
+
+          message:
+            'Güvercin mesajı teslim etti ve tekrar hazır! 🕊️'
+
+        }
+      );
+
+
+      console.log(
+        `✅ Mesaj iletildi ve kaydedildi: ${senderPhone} → ${receiverPhone} (Saat: ${timestamp})`
+      );
+
+    }
+  );
+
+
+  // ========================================
+  // GÜVERCİN İMPARATORLUĞU KAYDET
+  // ========================================
+
+  socket.on(
+    'save empire game',
+    async (data) => {
+
+      const phoneNumber =
+        socket.phoneNumber;
+
+
+      if (
+        !phoneNumber ||
+        !data?.state
+      ) {
+        return;
+      }
+
+
+      const success =
+        await saveEmpireGameToFirebase(
+          phoneNumber,
+          data.state
+        );
+
+
+      socket.emit(
+        'empire game saved',
+        {
+
+          success,
+
+          message:
+            success
+              ? 'Güvercin İmparatorluğu kaydedildi! 👑🕊️'
+              : 'Oyun kaydedilemedi.'
+
+        }
+      );
+
+    }
+  );
+
+
+  // ========================================
+  // GÜVERCİN İMPARATORLUĞU YÜKLE
+  // ========================================
+
+  socket.on(
+    'load empire game',
+    async () => {
+
+      const phoneNumber =
+        socket.phoneNumber;
+
+
+      if (!phoneNumber) return;
+
+
+      const state =
+        await loadEmpireGameFromFirebase(
+          phoneNumber
+        );
+
+
+      socket.emit(
+        'empire game loaded',
+        {
+
+          state:
+            state || null
+
+        }
+      );
+
+    }
+  );
+
+
+  // ========================================
+  // BAĞLANTI KESİLDİ
+  // ========================================
+
+  socket.on(
+    'disconnect',
+    () => {
+
+      if (socket.phoneNumber) {
+
+        console.log(
+          `🔴 ${socket.phoneNumber} bağlantıyı kesti.`
+        );
+
+      }
+
+    }
+  );
 
 });
 
-// ===============================
+
+// ==========================================
 // SUNUCU
-// ===============================
+// ==========================================
 
 const PORT =
-    process.env.PORT || 3001;
+  process.env.PORT || 3001;
+
 
 server.listen(
-    PORT,
-    () => {
+  PORT,
+  '0.0.0.0',
+  () => {
 
-        console.log(
-            `Güvercin Messenger çalışıyor: ${PORT}`
-        );
+    console.log(
+      `🕊️ Güvercin Sunucusu Hazır: ${PORT}`
+    );
 
-    }
+  }
 );
