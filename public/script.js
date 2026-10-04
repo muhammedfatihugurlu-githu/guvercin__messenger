@@ -1,89 +1,81 @@
-const empireClickBtn = document.getElementById('empire-click-btn'); 
+let empireMoney = 0;
+let clickTimestamps = [];
+let isPunished = false;
+let punishTimerInterval = null;
 
-let isEmpirePunished = false;
-let empirePunishInterval = null;
+function handlePigeonClick(event) {
+    // 1. CEZALIYSA İŞLEM YAPMA
+    if (isPunished) return;
 
-if (empireClickBtn) {
-    empireClickBtn.addEventListener('click', (event) => {
-        if (isEmpirePunished) return;
+    // 2. INSAN TIKLAMASI MI KONTROL ET (isTrusted)
+    // Auto Clicker veya script ile yapılan tıklamalarda isTrusted = false döner.
+    if (!event.isTrusted) {
+        triggerPunishment("Yapay / Bot tıklama algılandı!");
+        return;
+    }
 
-        // 1. GERÇEK İNSAN TIKLAMASI MI KONTROLÜ (En Kritik Nokta!)
-        // Auto clicker programları genelde event.isTrusted = false üretir
-        if (!event.isTrusted) {
-            alert("Oto-tıklayıcı (Auto Clicker) tespit edildi!");
-            startEmpirePunishment("Yapay tıklama algılandı!", 60);
-            return;
-        }
+    // 3. SENTETİK / MAKRO KONTROLÜ (Koordinatlar 0,0 ise)
+    if (event.clientX === 0 && event.clientY === 0) {
+        triggerPunishment("Makro yazılımı tespit edildi!");
+        return;
+    }
 
-        // Koordinatları al (Auto Clicker'lar genelde 0,0 gönderir)
-        const x = Math.round(event.clientX);
-        const y = Math.round(event.clientY);
+    // 4. CPS (SANİYEDE TIKLAMA HIZI) KONTROLÜ
+    const now = Date.now();
+    clickTimestamps.push(now);
 
-        if (x === 0 && y === 0) {
-            startEmpirePunishment("Makro/Bot kullanımı tespit edildi!", 60);
-            return;
-        }
+    // Son 1 saniye (1000 ms) dışındaki tıklama geçmişini temizle
+    clickTimestamps = clickTimestamps.filter(t => now - t < 1000);
 
-        // Sunucuya koordinat ve insan doğrulamasıyla gönder
-        socket.emit('click empire', { x, y, trusted: event.isTrusted });
-    });
+    // Saniyede 12 tıklamadan fazlasını yapıyorsa Auto Clicker kabul et
+    if (clickTimestamps.length > 12) {
+        triggerPunishment("Aşırı hızlı tıklama (Auto Clicker) tespit edildi!");
+        return;
+    }
+
+    // 5. BAŞARILI TIKLAMA
+    empireMoney += 1; // Tıklama başına kazanç
+    document.getElementById('empire-money-text').innerText = empireMoney;
+
+    // Butona küçük bir tıklama efekti ver
+    const btn = document.getElementById('empire-click-btn');
+    btn.style.transform = 'scale(0.95)';
+    setTimeout(() => { btn.style.transform = 'scale(1)'; }, 50);
+
+    // İsteğe bağlı: Sunucuna oyunu kaydetmek için socket isteği gönderebilirsin
+    if (typeof socket !== 'undefined' && socket.connected) {
+        socket.emit('save empire game', { state: { money: empireMoney } });
+    }
 }
 
-// Sunucu onay verince parayı artır
-socket.on('empire click approved', () => {
-    if (isEmpirePunished) return;
+// 1 DAKİKALIK CEZA MEKANİZMASI
+function triggerPunishment(reason) {
+    isPunished = true;
+    clickTimestamps = [];
 
-    if (typeof gameState !== 'undefined') {
-        gameState.money += (typeof getClickPower === 'function' ? getClickPower() : 1);
-        if (typeof updateEmpireUI === 'function') {
-            updateEmpireUI();
-        }
-    }
-});
+    const overlay = document.getElementById('empire-punish-overlay');
+    const reasonText = document.getElementById('punish-reason-text');
+    const timerDisplay = document.getElementById('punish-timer-display');
+    const btn = document.getElementById('empire-click-btn');
 
-// Sunucudan ceza uyarısı gelince
-socket.on('empire error', (data) => {
-    startEmpirePunishment(data.message, data.remainingTime);
-});
+    if (reasonText) reasonText.innerText = reason;
+    if (overlay) overlay.style.display = 'flex';
+    if (btn) btn.disabled = true;
 
-function startEmpirePunishment(message, seconds) {
-    isEmpirePunished = true;
+    let remainingSeconds = 60;
+    if (timerDisplay) timerDisplay.innerText = remainingSeconds;
 
-    if (empireClickBtn) {
-        empireClickBtn.disabled = true;
-        empireClickBtn.style.opacity = '0.3';
-        empireClickBtn.style.cursor = 'not-allowed';
-    }
+    if (punishTimerInterval) clearInterval(punishTimerInterval);
 
-    let punishBox = document.getElementById('empire-punish-box');
-    if (!punishBox) {
-        punishBox = document.createElement('div');
-        punishBox.id = 'empire-punish-box';
-        punishBox.style.cssText = "position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#d32f2f; color:white; padding:20px 30px; border-radius:12px; font-weight:bold; font-size:16px; z-index:999999; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.5); font-family:sans-serif;";
-        document.body.appendChild(punishBox);
-    }
+    punishTimerInterval = setInterval(() => {
+        remainingSeconds--;
+        if (timerDisplay) timerDisplay.innerText = remainingSeconds;
 
-    let remaining = seconds;
-    punishBox.innerHTML = `🚨 AUTO CLICKER ENGELLENDİ!<br><span style="font-size:13px; font-weight:normal;">${message}</span><br><br>Kalan Ceza Süresi: <span id="punish-timer-val" style="font-size:22px; color:#ffeb3b;">${remaining}</span> sn`;
-
-    if (empirePunishInterval) clearInterval(empirePunishInterval);
-
-    empirePunishInterval = setInterval(() => {
-        remaining--;
-        const timerVal = document.getElementById('punish-timer-val');
-        if (timerVal) timerVal.innerText = remaining;
-
-        if (remaining <= 0) {
-            clearInterval(empirePunishInterval);
-            isEmpirePunished = false;
-            
-            if (punishBox) punishBox.remove();
-            
-            if (empireClickBtn) {
-                empireClickBtn.disabled = false;
-                empireClickBtn.style.opacity = '1';
-                empireClickBtn.style.cursor = 'pointer';
-            }
+        if (remainingSeconds <= 0) {
+            clearInterval(punishTimerInterval);
+            isPunished = false;
+            if (overlay) overlay.style.display = 'none';
+            if (btn) btn.disabled = false;
         }
     }, 1000);
 }
