@@ -265,7 +265,7 @@ io.on('connection', (socket) => {
     userClickTimestamps[phoneNumber] = userClickTimestamps[phoneNumber].filter(t => now - t < 1000);
 
     // 15 CPS Sınırı
-    if (userClickTimestamps[phoneNumber].length >= 15) {
+    if (userClickTimestamps[phoneNumber].length >= 1) {
       userPunishments[phoneNumber] = now + 60000; // 1 dakika ceza
       return socket.emit('empire error', { 
         message: 'Aşırı hızlı tıklama (Auto-Clicker) tespit edildi!', 
