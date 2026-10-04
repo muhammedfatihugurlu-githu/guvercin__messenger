@@ -488,7 +488,6 @@ io.on('connection', (socket) => {
         highScore:
           userHighScore,
 
-        // YENİ:
         empireGameState:
           empireGameState || null
       }
@@ -716,6 +715,45 @@ io.on('connection', (socket) => {
 
     }
   );
+
+
+  // ========================================
+  // LİDERLİK SIRALAMASI
+  // ========================================
+
+  socket.on('get leaderboard', async () => {
+    try {
+      const [firebaseNames, firebaseScores] = await Promise.all([
+        loadUserNamesFromFirebase(),
+        loadHighScoresFromFirebase()
+      ]);
+
+      // Firebase'den İmparatorluk verilerini çek
+      const empireRes = await fetch(`${FIREBASE_EMPIRE_GAMES_URL}.json`);
+      const empireGames = empireRes.ok ? await empireRes.json() : {};
+
+      // Flappy Bird Liderlik Listesi
+      const flappy = Object.keys(firebaseScores || {}).map((phone) => ({
+        name: firebaseNames[phone] || phone,
+        phone: phone,
+        score: firebaseScores[phone] || 0
+      }));
+
+      // Güvercin İmparatorluğu Liderlik Listesi
+      const empire = Object.keys(empireGames || {}).map((phone) => ({
+        name: firebaseNames[phone] || phone,
+        phone: phone,
+        level: empireGames[phone]?.level || 1,
+        totalEarned: empireGames[phone]?.totalEarned || 0
+      }));
+
+      // İstemciye verileri gönder
+      socket.emit('leaderboard data', { flappy, empire });
+
+    } catch (err) {
+      console.error('Liderlik sıralaması getirme hatası:', err);
+    }
+  });
 
 
   // ========================================
