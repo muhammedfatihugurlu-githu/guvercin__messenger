@@ -21,10 +21,7 @@ async function loadMessages() {
     if (!response.ok) return [];
     const data = await response.json();
     return data ? Object.values(data) : [];
-  } catch (err) {
-    console.error('Firebase mesaj okuma hatası:', err);
-    return [];
-  }
+  } catch (err) { return []; }
 }
 
 async function saveMessage(newMsg) {
@@ -34,9 +31,7 @@ async function saveMessage(newMsg) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newMsg)
     });
-  } catch (err) {
-    console.error('Firebase mesaj kaydetme hatası:', err);
-  }
+  } catch (err) {}
 }
 
 async function loadUserNamesFromFirebase() {
@@ -131,9 +126,10 @@ const userNames = {};
 const userPasswords = {};
 const pigeonState = {};
 
-// Anti-Cheat Hafızası
+// Anti-Cheat Veri Yapıları
 const userClickTimestamps = {};
 const userPunishments = {};
+const userLastClicks = {}; // Koordinat ve tekrar takibi
 
 io.on('connection', (socket) => {
 
@@ -239,41 +235,67 @@ io.on('connection', (socket) => {
     socket.emit('pigeon delivered', { message: 'Güvercin döndü! 🕊️' });
   });
 
-  // --- GÜVERCİN İMPARATORLUĞU: 15 CPS ANTI-CHEAT & 1 DAKİKA CEZA ---
-  socket.on('click empire', () => {
+  // --- GÜVERCİN İMPARATORLUĞU: KOORDİNAT VE HIZ TABANLI ANTI-CHEAT ---
+  socket.on('click empire', (data) => {
     const phoneNumber = socket.phoneNumber;
     if (!phoneNumber) return;
 
     const now = Date.now();
 
-    // 1. Oyuncu cezalı mı?
+    // 1. Cezalı mı kontrol et
     if (userPunishments[phoneNumber] && now < userPunishments[phoneNumber]) {
       const kalanSaniye = Math.ceil((userPunishments[phoneNumber] - now) / 1000);
       return socket.emit('empire error', { 
-        message: 'Aşırı hızlı tıkladın! Oto-tıklayıcı tespit edildi.', 
+        message: 'Aşırı hızlı veya sabit noktaya tıkladın! Auto Clicker engellendi.', 
         remainingTime: kalanSaniye 
       });
     } else if (userPunishments[phoneNumber]) {
-      delete userPunishments[phoneNumber]; // Ceza süresi bitti
+      delete userPunishments[phoneNumber];
     }
 
+    const { x, y } = data || {};
+
+    // 2. KOORDİNAT KONTROLÜ (Aynı noktaya art arda tıklama tespiti)
+    if (typeof x === 'number' && typeof y === 'number') {
+      const last = userLastClicks[phoneNumber] || { x: null, y: null, count: 0 };
+
+      // Tam aynı piksele mi basıldı?
+      if (last.x === x && last.y === y) {
+        last.count += 1;
+      } else {
+        last.x = x;
+        last.y = y;
+        last.count = 1;
+      }
+
+      userLastClicks[phoneNumber] = last;
+
+      // Eğer 5 kez üst üste milimetrik aynı noktaya basıldıysa auto-clicker'dır
+      if (last.count >= 5) {
+        userPunishments[phoneNumber] = now + 60000; // 1 Dakika Ceza
+        delete userLastClicks[phoneNumber];
+        return socket.emit('empire error', { 
+          message: 'Sabit piksel tıklaması (Auto Clicker) tespit edildi! 1 dakika ceza aldın.', 
+          remainingTime: 60 
+        });
+      }
+    }
+
+    // 3. CPS (HIZ) KONTROLÜ
     if (!userClickTimestamps[phoneNumber]) {
       userClickTimestamps[phoneNumber] = [];
     }
 
-    // Son 1 saniyedeki (1000ms) tıklamaları süz
     userClickTimestamps[phoneNumber] = userClickTimestamps[phoneNumber].filter(t => now - t < 1000);
 
-    // 15 CPS Sınırı Kontrolü
     if (userClickTimestamps[phoneNumber].length >= 15) {
-      userPunishments[phoneNumber] = now + 60000; // 60 saniye ceza
+      userPunishments[phoneNumber] = now + 60000;
       return socket.emit('empire error', { 
         message: 'Aşırı hızlı tıklama tespit edildi! 1 dakika ceza aldın.', 
         remainingTime: 60 
       });
     }
 
-    // Tıklamayı kaydet ve onay ver
     userClickTimestamps[phoneNumber].push(now);
     socket.emit('empire click approved');
   });
@@ -282,7 +304,7 @@ io.on('connection', (socket) => {
     const phoneNumber = socket.phoneNumber;
     if (!phoneNumber || !data?.state) return;
     const success = await saveEmpireGameToFirebase(phoneNumber, data.state);
-    socket.emit('empire game saved', { success, message: success ? 'Kaydedildi! 👑🕊️️' : 'Kaydedilemedi.' });
+    socket.emit('empire game saved', { success, message: success ? 'Kaydedildi! 👑🕊️' : 'Kaydedilemedi.' });
   });
 
   socket.on('load empire game', async () => {
@@ -296,6 +318,7 @@ io.on('connection', (socket) => {
     if (socket.phoneNumber) {
       delete userClickTimestamps[socket.phoneNumber];
       delete userPunishments[socket.phoneNumber];
+      delete userLastClicks[socket.phoneNumber];
     }
   });
 

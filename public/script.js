@@ -1,24 +1,27 @@
-// Socket bağlantısının tanımlı olduğunu varsayıyoruz
-// const socket = io();
-
 const empireClickBtn = document.getElementById('empire-click-btn'); 
 
 let isEmpirePunished = false;
 let empirePunishInterval = null;
 
-// 1. BUTONA TIKLANDIĞINDA: Doğrudan parayı artırma, sunucuya onay isteği at!
+// Butona basıldığında koordinatları (X, Y) sunucuya ilet
 if (empireClickBtn) {
-    empireClickBtn.addEventListener('click', () => {
+    empireClickBtn.addEventListener('click', (event) => {
         if (isEmpirePunished) return;
-        socket.emit('click empire');
+
+        // Tıklanan tam piksel koordinatları
+        const clickData = {
+            x: Math.round(event.clientX),
+            y: Math.round(event.clientY)
+        };
+
+        socket.emit('click empire', clickData);
     });
 }
 
-// 2. SUNUCU TIKLAMAYI ONAYLADINDA: Parayı artır ve UI güncelle
+// Sunucu onay verince parayı artır
 socket.on('empire click approved', () => {
     if (isEmpirePunished) return;
 
-    // Oyundaki para artırma fonksiyonun/mantığın:
     if (typeof gameState !== 'undefined') {
         gameState.money += (typeof getClickPower === 'function' ? getClickPower() : 1);
         if (typeof updateEmpireUI === 'function') {
@@ -27,7 +30,7 @@ socket.on('empire click approved', () => {
     }
 });
 
-// 3. CEZA GELDİĞİNDE: Oyunu kilitle ve uyarıyı başlat
+// Ceza mekanizması ve ekran kilitleme
 socket.on('empire error', (data) => {
     startEmpirePunishment(data.message, data.remainingTime);
 });
@@ -35,14 +38,12 @@ socket.on('empire error', (data) => {
 function startEmpirePunishment(message, seconds) {
     isEmpirePunished = true;
 
-    // Butonu tıklanamaz yap
     if (empireClickBtn) {
         empireClickBtn.disabled = true;
         empireClickBtn.style.opacity = '0.3';
         empireClickBtn.style.cursor = 'not-allowed';
     }
 
-    // Ceza Bildirim Kutusunu Oluştur / Güncelle
     let punishBox = document.getElementById('empire-punish-box');
     if (!punishBox) {
         punishBox = document.createElement('div');
@@ -52,7 +53,7 @@ function startEmpirePunishment(message, seconds) {
     }
 
     let remaining = seconds;
-    punishBox.innerHTML = `🚨 OTO-TIKLAYICI ALGILANDI!<br><span style="font-size:13px; font-weight:normal;">${message}</span><br><br>Kalan Ceza Süresi: <span id="punish-timer-val" style="font-size:22px; color:#ffeb3b;">${remaining}</span> sn`;
+    punishBox.innerHTML = `🚨 AUTO CLICKER ENGELLENDİ!<br><span style="font-size:13px; font-weight:normal;">${message}</span><br><br>Kalan Ceza Süresi: <span id="punish-timer-val" style="font-size:22px; color:#ffeb3b;">${remaining}</span> sn`;
 
     if (empirePunishInterval) clearInterval(empirePunishInterval);
 
@@ -67,7 +68,6 @@ function startEmpirePunishment(message, seconds) {
             
             if (punishBox) punishBox.remove();
             
-            // Butonu tekrar aktif et
             if (empireClickBtn) {
                 empireClickBtn.disabled = false;
                 empireClickBtn.style.opacity = '1';
