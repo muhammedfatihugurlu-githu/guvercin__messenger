@@ -975,7 +975,7 @@
     .empire-save-btn,
     .empire-menu-btn {
       border: 0;
-      border-radius: 9px;
+      border-radius: 99px;
       padding: 9px 13px;
       font-size: 12px;
       font-weight: 800;
@@ -1349,6 +1349,116 @@
     }
 
     /* =========================
+       LİDERLİK SIRALAMASI EKRANI
+    ========================= */
+
+    .leaderboard-screen {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: #f0f2f5;
+      max-height: 520px;
+      overflow-y: auto;
+    }
+
+    .leaderboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .leaderboard-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .lb-tab {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid #e0e0e0;
+      background: white;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 12px;
+      cursor: pointer;
+      color: #667781;
+      text-align: center;
+    }
+
+    .lb-tab.active {
+      background: #00a884;
+      color: white;
+      border-color: #00a884;
+    }
+
+    .lb-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 360px;
+      overflow-y: auto;
+    }
+
+    .lb-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: white;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid #e0e0e0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+
+    .lb-item.top-1 {
+      border: 1.5px solid #f5a20b;
+      background: #fffdf5;
+    }
+
+    .lb-item.top-2 {
+      border: 1.5px solid #a0aec0;
+      background: #f8fafc;
+    }
+
+    .lb-item.top-3 {
+      border: 1.5px solid #dd6b20;
+      background: #fffaf0;
+    }
+
+    .lb-rank {
+      font-weight: 900;
+      font-size: 15px;
+      width: 30px;
+      text-align: center;
+    }
+
+    .lb-user-info {
+      flex: 1;
+      margin-left: 8px;
+    }
+
+    .lb-user-name {
+      font-weight: bold;
+      font-size: 13px;
+      color: #111b21;
+    }
+
+    .lb-user-phone {
+      font-size: 11px;
+      color: #667781;
+    }
+
+    .lb-score-val {
+      font-weight: 900;
+      font-size: 14px;
+      color: #008069;
+    }
+
+    /* =========================
        MOBİL
     ========================= */
 
@@ -1639,6 +1749,16 @@
           </div>
           <button class="btn-play-game" onclick="selectGame('empire')">Oyna</button>
         </div>
+
+        <!-- LİDERLİK SIRALAMASI BUTONU -->
+        <div class="game-item-card" style="border-color: #f5a20b; background: #fffdf5;">
+          <div class="game-item-icon" style="background: #fff3cd;">🏆</div>
+          <div class="game-item-info">
+            <div class="game-item-name" style="color: #b7791f;">Liderlik Sıralaması</div>
+            <div class="game-item-desc">En yüksek skora ve en büyük imparatorluğa sahip oyuncuları gör!</div>
+          </div>
+          <button class="btn-play-game" style="background: #f5a20b;" onclick="showLeaderboard()">Sıralama</button>
+        </div>
       </div>
     </div>
 
@@ -1677,6 +1797,28 @@
       </div>
     </div>
 
+    <!-- 4. EKRAN: LİDERLİK SIRALAMASI -->
+    <div id="leaderboard-screen" class="leaderboard-screen" style="display: none;">
+      <div class="leaderboard-header">
+        <button class="btn-back-menu" onclick="showGameMenu()">◀ Menü</button>
+        <span style="font-weight: bold; font-size: 15px; color: #111b21;">🏆 Liderlik Sıralaması</span>
+        <span></span>
+      </div>
+
+      <div class="leaderboard-tabs">
+        <button id="tab-flappy" class="lb-tab active" onclick="switchLbTab('flappy')">🕊️ Güvercin Uçur</button>
+        <button id="tab-empire" class="lb-tab" onclick="switchLbTab('empire')">👑 İmparatorluk</button>
+      </div>
+
+      <div id="lb-list-flappy" class="lb-list">
+        <!-- Flappy skorları buraya dolacak -->
+      </div>
+
+      <div id="lb-list-empire" class="lb-list" style="display: none;">
+        <!-- İmparatorluk liderleri buraya dolacak -->
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -1712,6 +1854,9 @@
 
   let myHighScore = 0;
   let empireLoadedFromServer = false;
+
+  let activeLbTab = 'flappy';
+  let cachedLeaderboardData = { flappy: [], empire: [] };
 
 
   /* =========================
@@ -2816,13 +2961,110 @@
   setInterval(()=>saveEmpireLocal(),3000);
   function saveEmpireToFirebase(){if(!myPhone||!socket.connected){showEmpireToast('❌ Sunucu bağlantısı yok!');return;}saveEmpireLocal();let b=document.getElementById('empire-save-btn');b.disabled=true;b.innerText='⏳ Kaydediliyor...';socket.emit('save empire game',{state:empireState});}
   socket.on('empire game saved',d=>{let b=document.getElementById('empire-save-btn');b.disabled=false;b.innerText='💾 Kaydet';showEmpireToast(d&&d.success?'✅ Firebase\'e kaydedildi!':'❌ Kayıt başarısız!');});
-  function openEmpireGame(){empireGameActive=true;stopGameLoop();document.querySelector('.game-card').classList.add('empire-mode');document.getElementById('game-header-title').innerText='👑🕊️ Güvercin İmparatorluğu';document.getElementById('game-menu-screen').style.display='none';document.getElementById('game-play-screen').style.display='none';document.getElementById('empire-play-screen').style.display='flex';updateEmpireUI();}
-  function selectGame(t){if(t==='flappy'){document.querySelector('.game-card').classList.remove('empire-mode');document.getElementById('game-header-title').innerText='🕊️ Güvercin Uçur';document.getElementById('game-menu-screen').style.display='none';document.getElementById('game-play-screen').style.display='flex';document.getElementById('empire-play-screen').style.display='none';document.getElementById('game-highscore').innerText=myHighScore;resetGame();}else if(t==='empire'){openEmpireGame();}}
-  function showGameMenu(){empireGameActive=false;stopGameLoop();document.querySelector('.game-card').classList.remove('empire-mode');document.getElementById('game-header-title').innerText='🎮 Oyun Salonu';document.getElementById('game-menu-screen').style.display='flex';document.getElementById('game-play-screen').style.display='none';document.getElementById('empire-play-screen').style.display='none';document.getElementById('menu-highscore').innerText=myHighScore;updateEmpireUI();}
+  function openEmpireGame(){empireGameActive=true;stopGameLoop();document.querySelector('.game-card').classList.add('empire-mode');document.getElementById('game-header-title').innerText='👑🕊️ Güvercin İmparatorluğu';document.getElementById('game-menu-screen').style.display='none';document.getElementById('game-play-screen').style.display='none';document.getElementById('leaderboard-screen').style.display='none';document.getElementById('empire-play-screen').style.display='flex';updateEmpireUI();}
+  function selectGame(t){if(t==='flappy'){document.querySelector('.game-card').classList.remove('empire-mode');document.getElementById('game-header-title').innerText='🕊️ Güvercin Uçur';document.getElementById('game-menu-screen').style.display='none';document.getElementById('game-play-screen').style.display='flex';document.getElementById('empire-play-screen').style.display='none';document.getElementById('leaderboard-screen').style.display='none';document.getElementById('game-highscore').innerText=myHighScore;resetGame();}else if(t==='empire'){openEmpireGame();}}
+  function showGameMenu(){empireGameActive=false;stopGameLoop();document.querySelector('.game-card').classList.remove('empire-mode');document.getElementById('game-header-title').innerText='🎮 Oyun Salonu';document.getElementById('game-menu-screen').style.display='flex';document.getElementById('game-play-screen').style.display='none';document.getElementById('empire-play-screen').style.display='none';document.getElementById('leaderboard-screen').style.display='none';document.getElementById('menu-highscore').innerText=myHighScore;updateEmpireUI();}
   loadEmpireLocal();updateEmpireUI();
 
   /* =========================
-     FLAPPY BIRD OYUN MOTORU (TAM SABİT HIZ & REKOR DÜZELTME)
+     LİDERLİK SIRALAMASI MANTIĞI
+  ========================= */
+
+  function showLeaderboard() {
+    empireGameActive = false;
+    stopGameLoop();
+    document.querySelector('.game-card').classList.remove('empire-mode');
+    document.getElementById('game-header-title').innerText = '🏆 Liderlik Sıralaması';
+    document.getElementById('game-menu-screen').style.display = 'none';
+    document.getElementById('game-play-screen').style.display = 'none';
+    document.getElementById('empire-play-screen').style.display = 'none';
+    document.getElementById('leaderboard-screen').style.display = 'flex';
+
+    socket.emit('get leaderboard');
+    renderLeaderboard();
+  }
+
+  function switchLbTab(tab) {
+    activeLbTab = tab;
+    document.getElementById('tab-flappy').classList.toggle('active', tab === 'flappy');
+    document.getElementById('tab-empire').classList.toggle('active', tab === 'empire');
+    document.getElementById('lb-list-flappy').style.display = tab === 'flappy' ? 'flex' : 'none';
+    document.getElementById('lb-list-empire').style.display = tab === 'empire' ? 'flex' : 'none';
+    renderLeaderboard();
+  }
+
+  socket.on('leaderboard data', function(data) {
+    if (data) {
+      cachedLeaderboardData.flappy = data.flappy || [];
+      cachedLeaderboardData.empire = data.empire || [];
+      renderLeaderboard();
+    }
+  });
+
+  function renderLeaderboard() {
+    // 1. Güvercin Uçur Liderleri
+    const flappyList = document.getElementById('lb-list-flappy');
+    flappyList.innerHTML = '';
+    
+    let flappyData = [...(cachedLeaderboardData.flappy || [])];
+    if (flappyData.length === 0) {
+      flappyData = [
+        { name: myName || 'Siz', phone: myPhone || '05XXXXXXXXX', score: myHighScore }
+      ];
+    }
+
+    flappyData.sort((a, b) => b.score - a.score);
+
+    flappyData.forEach((item, idx) => {
+      let rankIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`;
+      let topClass = idx === 0 ? 'top-1' : idx === 1 ? 'top-2' : idx === 2 ? 'top-3' : '';
+      
+      let div = document.createElement('div');
+      div.className = `lb-item ${topClass}`;
+      div.innerHTML = `
+        <div class="lb-rank">${rankIcon}</div>
+        <div class="lb-user-info">
+          <div class="lb-user-name">${escapeHtml(item.name || item.phone)}</div>
+          <div class="lb-user-phone">${escapeHtml(item.phone || '')}</div>
+        </div>
+        <div class="lb-score-val">${item.score} Skor</div>
+      `;
+      flappyList.appendChild(div);
+    });
+
+    // 2. İmparatorluk Liderleri
+    const empireList = document.getElementById('lb-list-empire');
+    empireList.innerHTML = '';
+
+    let empireData = [...(cachedLeaderboardData.empire || [])];
+    if (empireData.length === 0) {
+      empireData = [
+        { name: myName || 'Siz', phone: myPhone || '05XXXXXXXXX', level: empireState.level, totalEarned: empireState.totalEarned }
+      ];
+    }
+
+    empireData.sort((a, b) => (b.totalEarned || 0) - (a.totalEarned || 0));
+
+    empireData.forEach((item, idx) => {
+      let rankIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`;
+      let topClass = idx === 0 ? 'top-1' : idx === 1 ? 'top-2' : idx === 2 ? 'top-3' : '';
+
+      let div = document.createElement('div');
+      div.className = `lb-item ${topClass}`;
+      div.innerHTML = `
+        <div class="lb-rank">${rankIcon}</div>
+        <div class="lb-user-info">
+          <div class="lb-user-name">${escapeHtml(item.name || item.phone)}</div>
+          <div class="lb-user-phone">Seviye ${item.level || 1}</div>
+        </div>
+        <div class="lb-score-val">${formatEmpireNum(item.totalEarned || 0)} ₺</div>
+      `;
+      empireList.appendChild(div);
+    });
+  }
+
+  /* =========================
+     FLAPPY BIRD OYUN MOTORU
   ========================= */
 
   const canvas = document.getElementById('flappy-canvas');
@@ -3032,7 +3274,7 @@
     drawBird();
   }
 
-  // FİZİK ADIMI HESAPLAYICI (Sadece oyun fiziğini işler)
+  // FİZİK VE OYUN MANTIĞI
   function updatePhysics() {
     frameCount++;
 
@@ -3055,61 +3297,79 @@
         passed: false
       });
     }
+  }
 
-    // Boruların Hareketi
-    for (let i = 0; i < pipes.length; i++) {
+  function updatePipes() {
+    for (let i = pipes.length - 1; i >= 0; i--) {
       let p = pipes[i];
       p.x -= pipeSpeed;
 
+      // Skor Hesabı
       if (!p.passed && p.x + pipeWidth < bird.x) {
         p.passed = true;
         gameScore++;
         document.getElementById('game-score').innerText = gameScore;
+        if (gameScore > myHighScore) {
+          myHighScore = gameScore;
+          document.getElementById('game-highscore').innerText = myHighScore;
+          document.getElementById('menu-highscore').innerText = myHighScore;
+          socket.emit('update score', { highScore: myHighScore });
+        }
       }
 
-      // Çarpışma
-      if (
-        bird.x + bird.radius > p.x &&
-        bird.x - bird.radius < p.x + pipeWidth &&
-        (bird.y - bird.radius < p.topHeight || bird.y + bird.radius > p.bottomY)
-      ) {
-        gameOver();
-        return false;
+      // Çarpışma Testi
+      let birdLeft = bird.x - bird.radius + 3;
+      let birdRight = bird.x + bird.radius - 3;
+      let birdTop = bird.y - bird.radius + 3;
+      let birdBottom = bird.y + bird.radius - 3;
+
+      if (birdRight > p.x && birdLeft < p.x + pipeWidth) {
+        if (birdTop < p.topHeight || birdBottom > p.bottomY) {
+          endGame();
+          return;
+        }
+      }
+
+      // Ekran dışına çıkan boruları temizle
+      if (p.x + pipeWidth < 0) {
+        pipes.splice(i, 1);
       }
     }
-
-    pipes = pipes.filter(p => p.x + pipeWidth > -10);
-
-    // Zemin ve Tavan
-    if (bird.y + bird.radius >= canvas.height - 35 || bird.y - bird.radius <= 0) {
-      gameOver();
-      return false;
-    }
-
-    return true;
   }
 
-  // SABİT ZAMAN ADIMLI OYUN DÖNGÜSÜ (Hız dalgalanması imkansız hale getirildi)
-  function gameLoop(timestamp) {
+  function checkCollision() {
+    let groundY = canvas.height - 35;
+    if (bird.y + bird.radius >= groundY || bird.y - bird.radius <= 0) {
+      endGame();
+    }
+  }
+
+  function endGame() {
+    gameRunning = false;
+    stopGameLoop();
+    document.getElementById('game-start-screen').style.display = 'flex';
+    document.getElementById('game-start-screen').innerHTML = `
+      <h3>💥 Oyun Bitti!</h3>
+      <p>Skorun: <b>${gameScore}</b><br>En Yüksek Rekorun: <b>${myHighScore}</b></p>
+      <button onclick="startGame()">Tekrar Oyna</button>
+    `;
+  }
+
+  function gameLoop(now) {
     if (!gameRunning) return;
 
-    if (!lastTime) lastTime = timestamp;
-    let deltaTime = timestamp - lastTime;
-    lastTime = timestamp;
+    let dt = now - lastTime;
+    lastTime = now;
+    if (dt > 100) dt = 100;
+    accumulator += dt;
 
-    // Mobil arka plana geçişlerde aşırı atlamayı önle
-    if (deltaTime > 100) deltaTime = 100;
-
-    accumulator += deltaTime;
-
-    // Sabit 16.66ms dilimlerinde fiziği çalıştır
     while (accumulator >= timeStep) {
-      let alive = updatePhysics();
-      if (!alive) return; // Oyun bittiyse döngüyü kır
+      updatePhysics();
+      updatePipes();
+      checkCollision();
       accumulator -= timeStep;
     }
 
-    // Ekranı Çiz
     drawBackground();
     drawPipes();
     drawGround();
@@ -3118,33 +3378,6 @@
     if (gameRunning) {
       gameAnimationId = requestAnimationFrame(gameLoop);
     }
-  }
-
-  function gameOver() {
-    stopGameLoop();
-
-    const currentScore = parseInt(gameScore, 10);
-    const numericHighScore = parseInt(myHighScore, 10);
-
-    // Rekor Kontrolü ve Firebase / Sunucu Güncellemesi
-    if (currentScore > numericHighScore) {
-      myHighScore = currentScore;
-      document.getElementById('game-highscore').innerText = myHighScore;
-      document.getElementById('menu-highscore').innerText = myHighScore;
-
-      // Mobilde kopmaları önlemek için hem numara hem skor iletiliyor
-      socket.emit('update score', { 
-        phoneNumber: myPhone, 
-        score: myHighScore 
-      });
-    }
-
-    document.getElementById('game-start-screen').style.display = 'flex';
-    document.getElementById('game-start-screen').innerHTML = `
-      <h3>Oyun Bitti!</h3>
-      <p>Skorunuz: <b>${currentScore}</b><br>En Yüksek Rekor: <b>${myHighScore}</b></p>
-      <button onclick="startGame()">Yeniden Oyna</button>
-    `;
   }
 
 </script>
