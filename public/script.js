@@ -1,65 +1,71 @@
-// Güvercin/Tıklama butonunun ID'si (Kendi HTML'indeki ID ile değiştir):
+// Socket bağlantısının tanımlı olduğunu varsayıyoruz
+// const socket = io();
+
 const empireClickBtn = document.getElementById('empire-click-btn'); 
 
-let isPunished = false;
-let empireWarningInterval = null;
+let isEmpirePunished = false;
+let empirePunishInterval = null;
 
-// 1. BUTONA TIKLANDIĞINDA: Doğrudan parayı artırma, sunucuya gönder!
+// 1. BUTONA TIKLANDIĞINDA: Doğrudan parayı artırma, sunucuya onay isteği at!
 if (empireClickBtn) {
     empireClickBtn.addEventListener('click', () => {
-        if (isPunished) return; // Cezalıysa tıklama çalışmaz
+        if (isEmpirePunished) return;
         socket.emit('click empire');
     });
 }
 
-// 2. SUNUCU TIKLAMAYI ONAYLARSA: Parayı burada artır
+// 2. SUNUCU TIKLAMAYI ONAYLADINDA: Parayı artır ve UI güncelle
 socket.on('empire click approved', () => {
-    if (isPunished) return;
+    if (isEmpirePunished) return;
 
-    // Kendi oyundaki para artırma mantığını buraya koy:
-    gameState.money += getClickPower(); 
-    updateEmpireUI(); // Arayüzü güncelle
+    // Oyundaki para artırma fonksiyonun/mantığın:
+    if (typeof gameState !== 'undefined') {
+        gameState.money += (typeof getClickPower === 'function' ? getClickPower() : 1);
+        if (typeof updateEmpireUI === 'function') {
+            updateEmpireUI();
+        }
+    }
 });
 
-// 3. SUNUCUDAN CEZA GELİRSE: Oyunu kilitle ve ekrana uyarıyı bas
+// 3. CEZA GELDİĞİNDE: Oyunu kilitle ve uyarıyı başlat
 socket.on('empire error', (data) => {
-    applyEmpirePunishment(data.message, data.remainingTime);
+    startEmpirePunishment(data.message, data.remainingTime);
 });
 
-function applyEmpirePunishment(message, seconds) {
-    isPunished = true;
+function startEmpirePunishment(message, seconds) {
+    isEmpirePunished = true;
 
-    // Tıklama butonunu pasifleştir
+    // Butonu tıklanamaz yap
     if (empireClickBtn) {
         empireClickBtn.disabled = true;
-        empireClickBtn.style.opacity = '0.4';
+        empireClickBtn.style.opacity = '0.3';
         empireClickBtn.style.cursor = 'not-allowed';
     }
 
-    // Ceza Kutusunu Ekrana Ekle
-    let box = document.getElementById('empire-punishment-box');
-    if (!box) {
-        box = document.createElement('div');
-        box.id = 'empire-punishment-box';
-        box.style.cssText = "position:fixed; top:30px; left:50%; transform:translateX(-50%); background:#ff0033; color:white; padding:20px 30px; border-radius:12px; font-weight:bold; font-size:18px; z-index:999999; text-align:center; box-shadow:0 0 20px rgba(255,0,51,0.6); font-family:sans-serif;";
-        document.body.appendChild(box);
+    // Ceza Bildirim Kutusunu Oluştur / Güncelle
+    let punishBox = document.getElementById('empire-punish-box');
+    if (!punishBox) {
+        punishBox = document.createElement('div');
+        punishBox.id = 'empire-punish-box';
+        punishBox.style.cssText = "position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#d32f2f; color:white; padding:20px 30px; border-radius:12px; font-weight:bold; font-size:16px; z-index:999999; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.5); font-family:sans-serif;";
+        document.body.appendChild(punishBox);
     }
 
     let remaining = seconds;
-    box.innerHTML = `🚫 CEZALANDIRILDIN!<br><span style="font-size:14px; font-weight:normal;">${message}</span><br><br>Kalan Süre: <span id="punish-timer" style="font-size:22px; color:#ffea00;">${remaining}</span> sn`;
+    punishBox.innerHTML = `🚨 OTO-TIKLAYICI ALGILANDI!<br><span style="font-size:13px; font-weight:normal;">${message}</span><br><br>Kalan Ceza Süresi: <span id="punish-timer-val" style="font-size:22px; color:#ffeb3b;">${remaining}</span> sn`;
 
-    if (empireWarningInterval) clearInterval(empireWarningInterval);
+    if (empirePunishInterval) clearInterval(empirePunishInterval);
 
-    empireWarningInterval = setInterval(() => {
+    empirePunishInterval = setInterval(() => {
         remaining--;
-        const timerEl = document.getElementById('punish-timer');
-        if (timerEl) timerEl.innerText = remaining;
+        const timerVal = document.getElementById('punish-timer-val');
+        if (timerVal) timerVal.innerText = remaining;
 
         if (remaining <= 0) {
-            clearInterval(empireWarningInterval);
-            isPunished = false;
+            clearInterval(empirePunishInterval);
+            isEmpirePunished = false;
             
-            if (box) box.remove();
+            if (punishBox) punishBox.remove();
             
             // Butonu tekrar aktif et
             if (empireClickBtn) {
