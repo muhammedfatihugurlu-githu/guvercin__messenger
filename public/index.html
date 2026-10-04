@@ -502,6 +502,8 @@
       word-wrap: break-word;
 
       box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+
+      position: relative;
     }
 
     .msg-sender-name {
@@ -517,6 +519,10 @@
       align-self: flex-end;
 
       border-top-right-radius: 0;
+
+      user-select: none;
+      -webkit-user-select: none;
+      cursor: pointer;
     }
 
     .msg-incoming {
@@ -634,6 +640,83 @@
       text-align: center;
 
       padding: 20px;
+    }
+
+    /* =========================
+       MESAJ SİLME MODALI
+    ========================= */
+
+    .delete-msg-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 300;
+      padding: 20px;
+    }
+
+    .delete-msg-card {
+      background: white;
+      width: 100%;
+      max-width: 320px;
+      padding: 22px 20px;
+      border-radius: 14px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      animation: modalPop 0.15s ease-out;
+    }
+
+    @keyframes modalPop {
+      from { transform: scale(0.88); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .delete-msg-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #111b21;
+      margin-bottom: 8px;
+    }
+
+    .delete-msg-desc {
+      font-size: 13px;
+      color: #667781;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .delete-msg-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-delete-cancel {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      background: #f0f2f5;
+      color: #333;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .btn-delete-confirm {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: #ea4335;
+      color: white;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
     }
 
     /* =========================
@@ -1714,6 +1797,22 @@
 
 
 <!-- =========================
+     MESAJ SİLME MODALI
+========================= -->
+
+<div id="delete-msg-modal" class="delete-msg-modal" style="display: none;">
+  <div class="delete-msg-card">
+    <div class="delete-msg-title">🗑️ Mesajı Sil</div>
+    <div class="delete-msg-desc">Bu mesajı hem kendi ekranınızdan hem de karşı taraftan silmek istediğinize emin misiniz?</div>
+    <div class="delete-msg-actions">
+      <button class="btn-delete-cancel" onclick="closeDeleteModal()">İptal</button>
+      <button class="btn-delete-confirm" id="btn-confirm-delete">Sil</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- =========================
      OYUN SALONU MODALI
 ========================= -->
 
@@ -2036,7 +2135,7 @@
 
       userNamesMap = data.userNamesMap || {};
       allMessages = data.history || [];
-      
+
       // Rekor sayısını kesin sayıya (integer) dönüştürüyoruz
       myHighScore = parseInt(data.highScore || 0, 10);
       document.getElementById('menu-highscore').innerText = myHighScore;
@@ -2455,6 +2554,60 @@
 
 
   /* =========================
+     MESAJ SİLME MANTIĞI
+  ========================= */
+
+  let msgToDelete = null;
+
+  function openDeleteModal(msg) {
+    msgToDelete = msg;
+    document.getElementById('delete-msg-modal').style.display = 'flex';
+    document.getElementById('btn-confirm-delete').onclick = function() {
+      confirmDeleteMessage();
+    };
+  }
+
+  function closeDeleteModal() {
+    msgToDelete = null;
+    document.getElementById('delete-msg-modal').style.display = 'none';
+  }
+
+  function confirmDeleteMessage() {
+    if (!msgToDelete) return;
+
+    const messageId = msgToDelete.id;
+    const firebaseKey = msgToDelete.firebaseKey;
+    const receiverPhone = msgToDelete.receiverPhone;
+
+    // Sunucuya ve Firebase'e mesaj silme isteği gönder
+    socket.emit('delete message', {
+      messageId: messageId,
+      firebaseKey: firebaseKey,
+      receiverPhone: receiverPhone
+    });
+
+    closeDeleteModal();
+  }
+
+  // Sunucudan mesajın silindiği bildirimi geldiğinde
+  socket.on('message deleted', function(data) {
+    const messageId = data.messageId;
+
+    // 1. Dizi içinden sil
+    allMessages = allMessages.filter(m => String(m.id) !== String(messageId));
+
+    // 2. Ekrandan elementi kaldır
+    const elem = document.getElementById(`msg-${messageId}`);
+    if (elem) {
+      elem.remove();
+    }
+
+    // 3. Sol taraftaki kişi listesindeki son mesaj özetini güncelle
+    renderContacts();
+  });
+
+
+  /* =========================
      MESAJ GÖSTER
   ========================= */
 
@@ -2487,6 +2640,7 @@
     const bubble =
       document.createElement('div');
 
+    bubble.id = `msg-${msg.id}`;
 
     bubble.className =
       `msg-bubble ${
@@ -2515,6 +2669,62 @@
       </div>
 
     `;
+
+
+    // Yalnızca kendi mesajlarımız için 1 saniye basılı tutma (Long Press) dinleyicisi
+    if (isOutgoing) {
+      let pressTimer = null;
+      let startX = 0;
+      let startY = 0;
+
+      const startPress = (e) => {
+        if (pressTimer) clearTimeout(pressTimer);
+
+        startX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+        startY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+
+        pressTimer = setTimeout(() => {
+          pressTimer = null;
+          if (navigator.vibrate) {
+            try { navigator.vibrate(50); } catch(err){}
+          }
+          openDeleteModal(msg);
+        }, 1000); // 1 saniye (1000 ms)
+      };
+
+      const cancelPress = () => {
+        if (pressTimer) {
+          clearTimeout(pressTimer);
+          pressTimer = null;
+        }
+      };
+
+      const movePress = (e) => {
+        if (!pressTimer) return;
+        const currentX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+        const currentY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+        // Sayfa kaydırma vb. durumlarda basılı tutmayı iptal et
+        if (Math.abs(currentX - startX) > 10 || Math.abs(currentY - startY) > 10) {
+          cancelPress();
+        }
+      };
+
+      // Dokunmatik ve Fare Olayları
+      bubble.addEventListener('touchstart', startPress, { passive: true });
+      bubble.addEventListener('touchend', cancelPress);
+      bubble.addEventListener('touchmove', movePress, { passive: true });
+      bubble.addEventListener('touchcancel', cancelPress);
+
+      bubble.addEventListener('mousedown', startPress);
+      bubble.addEventListener('mouseup', cancelPress);
+      bubble.addEventListener('mouseleave', cancelPress);
+      bubble.addEventListener('mousemove', movePress);
+
+      // Mobil cihazlarda varsayılan sağ tık / metin seçme menüsünü engelle
+      bubble.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+      });
+    }
 
 
     chatBody.appendChild(
