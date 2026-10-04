@@ -239,49 +239,50 @@ io.on('connection', (socket) => {
     socket.emit('pigeon delivered', { message: 'Güvercin döndü! 🕊️' });
   });
 
-  // --- GÜVERCİN İMPARATORLUĞU: 15 CPS & 1 DAKİKA CEZA SİSTEMİ ---
+  // --- GÜVERCİN İMPARATORLUĞU: 15 CPS ANTI-CHEAT & 1 DAKİKA CEZA ---
   socket.on('click empire', () => {
     const phoneNumber = socket.phoneNumber;
     if (!phoneNumber) return;
 
     const now = Date.now();
 
-    // Cezalı mı kontrol et
+    // 1. Oyuncu cezalı mı?
     if (userPunishments[phoneNumber] && now < userPunishments[phoneNumber]) {
       const kalanSaniye = Math.ceil((userPunishments[phoneNumber] - now) / 1000);
       return socket.emit('empire error', { 
-        message: 'Çok hızlı tıkladın! Oto-tıklayıcı algılandı.', 
+        message: 'Aşırı hızlı tıkladın! Oto-tıklayıcı tespit edildi.', 
         remainingTime: kalanSaniye 
       });
     } else if (userPunishments[phoneNumber]) {
-      delete userPunishments[phoneNumber];
+      delete userPunishments[phoneNumber]; // Ceza süresi bitti
     }
 
     if (!userClickTimestamps[phoneNumber]) {
       userClickTimestamps[phoneNumber] = [];
     }
 
-    // Son 1 saniyedeki tıklamaları filtrele
+    // Son 1 saniyedeki (1000ms) tıklamaları süz
     userClickTimestamps[phoneNumber] = userClickTimestamps[phoneNumber].filter(t => now - t < 1000);
 
-    // 15 CPS Sınırı
-    if (userClickTimestamps[phoneNumber].length >= 1) {
-      userPunishments[phoneNumber] = now + 60000; // 1 dakika ceza
+    // 15 CPS Sınırı Kontrolü
+    if (userClickTimestamps[phoneNumber].length >= 15) {
+      userPunishments[phoneNumber] = now + 60000; // 60 saniye ceza
       return socket.emit('empire error', { 
-        message: 'Aşırı hızlı tıklama (Auto-Clicker) tespit edildi!', 
+        message: 'Aşırı hızlı tıklama tespit edildi! 1 dakika ceza aldın.', 
         remainingTime: 60 
       });
     }
 
+    // Tıklamayı kaydet ve onay ver
     userClickTimestamps[phoneNumber].push(now);
-    socket.emit('empire click approved', { success: true });
+    socket.emit('empire click approved');
   });
 
   socket.on('save empire game', async (data) => {
     const phoneNumber = socket.phoneNumber;
     if (!phoneNumber || !data?.state) return;
     const success = await saveEmpireGameToFirebase(phoneNumber, data.state);
-    socket.emit('empire game saved', { success, message: success ? 'Kaydedildi! 👑🕊️' : 'Kaydedilemedi.' });
+    socket.emit('empire game saved', { success, message: success ? 'Kaydedildi! 👑🕊️️' : 'Kaydedilemedi.' });
   });
 
   socket.on('load empire game', async () => {
