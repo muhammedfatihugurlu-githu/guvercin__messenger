@@ -235,14 +235,14 @@ io.on('connection', (socket) => {
     socket.emit('pigeon delivered', { message: 'Güvercin döndü! 🕊️' });
   });
 
-  // --- GÜVERCİN İMPARATORLUĞU: KOORDİNAT VE HIZ TABANLI ANTI-CHEAT ---
+  // --- GÜVERCİN İMPARATORLUĞU: TAM KORUMA ANTI-CHEAT ---
   socket.on('click empire', (data) => {
     const phoneNumber = socket.phoneNumber;
     if (!phoneNumber) return;
 
     const now = Date.now();
 
-    // 1. Cezalı mı kontrol et
+    // 1. Cezalı mı kontrolü
     if (userPunishments[phoneNumber] && now < userPunishments[phoneNumber]) {
       const kalanSaniye = Math.ceil((userPunishments[phoneNumber] - now) / 1000);
       return socket.emit('empire error', { 
@@ -253,13 +253,21 @@ io.on('connection', (socket) => {
       delete userPunishments[phoneNumber];
     }
 
-    const { x, y } = data || {};
+    const { x, y, trusted } = data || {};
 
-    // 2. KOORDİNAT KONTROLÜ (Aynı noktaya art arda tıklama tespiti)
+    // 2. JS Yapay Tıklama Kontrolü
+    if (trusted === false) {
+      userPunishments[phoneNumber] = now + 60000;
+      return socket.emit('empire error', { 
+        message: 'Yapay tıklama (Auto Clicker) tespit edildi!', 
+        remainingTime: 60 
+      });
+    }
+
+    // 3. Sabit Piksel Koordinat Kontrolü (Aynı piksele 3 kere tıklarsa direkt ceza)
     if (typeof x === 'number' && typeof y === 'number') {
       const last = userLastClicks[phoneNumber] || { x: null, y: null, count: 0 };
 
-      // Tam aynı piksele mi basıldı?
       if (last.x === x && last.y === y) {
         last.count += 1;
       } else {
@@ -270,25 +278,24 @@ io.on('connection', (socket) => {
 
       userLastClicks[phoneNumber] = last;
 
-      // Eğer 5 kez üst üste milimetrik aynı noktaya basıldıysa auto-clicker'dır
-      if (last.count >= 5) {
-        userPunishments[phoneNumber] = now + 60000; // 1 Dakika Ceza
+      if (last.count >= 3) { // 3 kez aynı piksel = Auto Clicker
+        userPunishments[phoneNumber] = now + 60000;
         delete userLastClicks[phoneNumber];
         return socket.emit('empire error', { 
-          message: 'Sabit piksel tıklaması (Auto Clicker) tespit edildi! 1 dakika ceza aldın.', 
+          message: 'Milimetrik aynı noktaya tıklandı (Auto Clicker)! 1 dakika ceza aldın.', 
           remainingTime: 60 
         });
       }
     }
 
-    // 3. CPS (HIZ) KONTROLÜ
+    // 4. CPS Hız Kontrolü (Saniyede 10 tıklamadan fazlası)
     if (!userClickTimestamps[phoneNumber]) {
       userClickTimestamps[phoneNumber] = [];
     }
 
     userClickTimestamps[phoneNumber] = userClickTimestamps[phoneNumber].filter(t => now - t < 1000);
 
-    if (userClickTimestamps[phoneNumber].length >= 15) {
+    if (userClickTimestamps[phoneNumber].length >= 10) {
       userPunishments[phoneNumber] = now + 60000;
       return socket.emit('empire error', { 
         message: 'Aşırı hızlı tıklama tespit edildi! 1 dakika ceza aldın.', 
@@ -299,7 +306,7 @@ io.on('connection', (socket) => {
     userClickTimestamps[phoneNumber].push(now);
     socket.emit('empire click approved');
   });
-
+  
   socket.on('save empire game', async (data) => {
     const phoneNumber = socket.phoneNumber;
     if (!phoneNumber || !data?.state) return;

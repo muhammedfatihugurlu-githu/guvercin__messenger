@@ -3,18 +3,29 @@ const empireClickBtn = document.getElementById('empire-click-btn');
 let isEmpirePunished = false;
 let empirePunishInterval = null;
 
-// Butona basıldığında koordinatları (X, Y) sunucuya ilet
 if (empireClickBtn) {
     empireClickBtn.addEventListener('click', (event) => {
         if (isEmpirePunished) return;
 
-        // Tıklanan tam piksel koordinatları
-        const clickData = {
-            x: Math.round(event.clientX),
-            y: Math.round(event.clientY)
-        };
+        // 1. GERÇEK İNSAN TIKLAMASI MI KONTROLÜ (En Kritik Nokta!)
+        // Auto clicker programları genelde event.isTrusted = false üretir
+        if (!event.isTrusted) {
+            alert("Oto-tıklayıcı (Auto Clicker) tespit edildi!");
+            startEmpirePunishment("Yapay tıklama algılandı!", 60);
+            return;
+        }
 
-        socket.emit('click empire', clickData);
+        // Koordinatları al (Auto Clicker'lar genelde 0,0 gönderir)
+        const x = Math.round(event.clientX);
+        const y = Math.round(event.clientY);
+
+        if (x === 0 && y === 0) {
+            startEmpirePunishment("Makro/Bot kullanımı tespit edildi!", 60);
+            return;
+        }
+
+        // Sunucuya koordinat ve insan doğrulamasıyla gönder
+        socket.emit('click empire', { x, y, trusted: event.isTrusted });
     });
 }
 
@@ -30,7 +41,7 @@ socket.on('empire click approved', () => {
     }
 });
 
-// Ceza mekanizması ve ekran kilitleme
+// Sunucudan ceza uyarısı gelince
 socket.on('empire error', (data) => {
     startEmpirePunishment(data.message, data.remainingTime);
 });
